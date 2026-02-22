@@ -2,12 +2,22 @@ name: Release
 
 on:
   push:
-    branches: [master]
-    tags: ["*"]
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag to package (e.g. 1.1.2)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   release-please:
-    if: github.ref == 'refs/heads/master'
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
@@ -15,17 +25,22 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
-        with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
 
   package:
     needs: release-please
-    if: ${{ !failure() && !cancelled() && needs.release-please.outputs.release_created }}
+    if: ${{ always() && (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
+      WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: BigWigsMods/packager@v2
-        env:
-          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REF: refs/tags/${{ needs.release-please.outputs.tag_name }}
+      - name: Clone project
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name || github.event.inputs.tag_name }}
+          fetch-depth: 0
+
+      - name: Package and release
+        uses: BigWigsMods/packager@v2
