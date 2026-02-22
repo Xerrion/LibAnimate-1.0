@@ -17,12 +17,14 @@ LibAnimate is a standalone, LibStub-based animation library that provides smooth
 
 ## Features
 
-- **OnUpdate-driven** — Avoids WoW AnimationGroup bugs entirely
-- **Single shared driver frame** — All animations run through one OnUpdate handler
-- **Keyframe interpolation** — Define animations as keyframes with translate, scale, and alpha
-- **Per-segment easing** — Named presets or custom cubic-bezier curves per keyframe segment
-- **77 built-in animations** — Entrance, exit, and attention-seeker animations
-- **Extensible** — Register custom animations via `RegisterAnimation`
+- **OnUpdate-driven** â€” Avoids WoW AnimationGroup bugs entirely
+- **Single shared driver frame** â€” All animations run through one OnUpdate handler
+- **Keyframe interpolation** â€” Define animations as keyframes with translate, scale, and alpha
+- **Per-segment easing** â€” Named presets or custom cubic-bezier curves per keyframe segment
+- **77 built-in animations** â€” Entrance, exit, and attention-seeker animations
+- **Extensible** â€” Register custom animations via `RegisterAnimation`
+- **Delay & repeat** â€” Start after a delay, loop animations with `repeatCount`
+- **Animation queues** â€” Chain animations in sequence with per-step callbacks
 
 ## Supported Versions
 
@@ -111,6 +113,9 @@ LibAnimate:Stop(myFrame)
 | `GetEntranceAnimations()` | List entrance animation names |
 | `GetExitAnimations()` | List exit animation names |
 | `GetAttentionAnimations()` | List attention seeker names |
+| `Queue(frame, entries, opts?)` | Queue a sequence of animations on a frame |
+| `ClearQueue(frame)` | Cancel an animation queue and stop |
+| `IsQueued(frame)` | Check if a frame has a pending queue |
 | `RegisterAnimation(name, def)` | Register a custom animation |
 
 For detailed parameters, return types, and examples, see the **[API Reference](https://github.com/Xerrion/LibAnimate/wiki/API-Reference)**.
@@ -135,12 +140,12 @@ Browse the full catalog with descriptions in the **[Animation Catalog](https://g
 
 For comprehensive documentation, visit the **[LibAnimate Wiki](https://github.com/Xerrion/LibAnimate/wiki)**:
 
-- **[Getting Started](https://github.com/Xerrion/LibAnimate/wiki/Getting-Started)** — Installation, first animation, key concepts
-- **[API Reference](https://github.com/Xerrion/LibAnimate/wiki/API-Reference)** — Complete method documentation
-- **[Animation Catalog](https://github.com/Xerrion/LibAnimate/wiki/Animation-Catalog)** — All 77 built-in animations
-- **[Custom Animations](https://github.com/Xerrion/LibAnimate/wiki/Custom-Animations)** — Create your own animations
-- **[Easing Functions](https://github.com/Xerrion/LibAnimate/wiki/Easing-Functions)** — Presets and cubic-bezier curves
+- **[Getting Started](https://github.com/Xerrion/LibAnimate/wiki/Getting-Started)** â€” Installation, first animation, key concepts
+- **[API Reference](https://github.com/Xerrion/LibAnimate/wiki/API-Reference)** â€” Complete method documentation
+- **[Animation Catalog](https://github.com/Xerrion/LibAnimate/wiki/Animation-Catalog)** â€” All 77 built-in animations
+- **[Custom Animations](https://github.com/Xerrion/LibAnimate/wiki/Custom-Animations)** â€” Create your own animations
+- **[Easing Functions](https://github.com/Xerrion/LibAnimate/wiki/Easing-Functions)** â€” Presets and cubic-bezier curves
 
 ## License
 
-MIT — See [LICENSE](LICENSE) file.
+MIT â€” See [LICENSE](LICENSE) file.

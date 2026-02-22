@@ -41,7 +41,22 @@ if not lib then return end
 ---@class AnimateOpts
 ---@field duration number? Override animation duration in seconds
 ---@field distance number? Override translation distance in pixels
+---@field delay number? Delay in seconds before animation starts (default 0)
+---@field repeatCount number? Number of times to play (0 = infinite, nil/1 = once)
 ---@field onFinished fun(frame: Frame)? Callback fired when the animation completes naturally
+
+--- Configuration for a single step in an animation queue.
+---@class QueueEntry
+---@field name string Animation name
+---@field duration number? Duration override in seconds
+---@field distance number? Distance override in pixels
+---@field delay number? Delay before this step starts in seconds
+---@field repeatCount number? Repeat count for this step (0 = infinite)
+---@field onFinished fun(frame: Frame)? Callback when this step completes
+
+--- Options for the animation queue.
+---@class QueueOpts
+---@field onFinished fun(frame: Frame)? Called when the entire sequence completes
 
 ---@class AnimationState
 ---@field definition AnimationDefinition
@@ -49,6 +64,9 @@ if not lib then return end
 ---@field startTime number GetTime() at animation start
 ---@field duration number Active duration in seconds
 ---@field distance number Translation distance in pixels
+---@field delay number Delay in seconds before animation starts
+---@field repeatCount number Number of total repeats (0 = infinite, 1 = once)
+---@field currentRepeat number Current repeat iteration (starts at 1)
 ---@field onFinished fun(frame: Frame)?
 ---@field anchorPoint string Captured anchor point
 ---@field anchorRelativeTo Frame? Captured relative-to frame
@@ -79,6 +97,7 @@ local table_sort = table.sort
 
 lib.animations = lib.animations or {}
 lib.activeAnimations = lib.activeAnimations or {}
+lib.animationQueues = lib.animationQueues or {}
 
 if not lib.driverFrame then
     lib.driverFrame = CreateFrame("Frame")
@@ -385,30 +404,62 @@ driverFrame:SetScript("OnUpdate", function()
     local toRemove = nil
 
     for frame, state in pairs(lib.activeAnimations) do
-        local rawProgress = math_min((now - state.startTime) / state.duration, 1.0)
+        local elapsed = now - state.startTime
 
-        -- Find bracketing keyframes
-        local kf1, kf2, segmentProgress, kf1Index = FindKeyframes(state.keyframes, rawProgress)
+        -- Handle delay: skip interpolation while in delay period
+        if elapsed < state.delay then -- luacheck: ignore 542
+            -- Do nothing, frame stays in its pre-animation state
+        else
+            local rawProgress = math_min(
+                (elapsed - state.delay) / state.duration, 1.0
+            )
 
-        -- Apply per-segment easing (pre-resolved at animation start)
-        if state.resolvedEasings[kf1Index] then
-            segmentProgress = state.resolvedEasings[kf1Index](segmentProgress)
-        end
+            -- Find bracketing keyframes
+            local kf1, kf2, segmentProgress, kf1Index =
+                FindKeyframes(state.keyframes, rawProgress)
 
-        -- Interpolate properties (unrolled for performance)
-        local easedT = segmentProgress
-        local tx = Lerp(GetProperty(kf1, "translateX"), GetProperty(kf2, "translateX"), easedT)
-        local ty = Lerp(GetProperty(kf1, "translateY"), GetProperty(kf2, "translateY"), easedT)
-        local sc = Lerp(GetProperty(kf1, "scale"), GetProperty(kf2, "scale"), easedT)
-        local al = Lerp(GetProperty(kf1, "alpha"), GetProperty(kf2, "alpha"), easedT)
+            -- Apply per-segment easing (pre-resolved at animation start)
+            if state.resolvedEasings[kf1Index] then
+                segmentProgress =
+                    state.resolvedEasings[kf1Index](segmentProgress)
+            end
 
-        -- Apply to frame
-        ApplyToFrame(frame, state, tx, ty, sc, al)
+            -- Interpolate properties (unrolled for performance)
+            local easedT = segmentProgress
+            local tx = Lerp(
+                GetProperty(kf1, "translateX"),
+                GetProperty(kf2, "translateX"), easedT
+            )
+            local ty = Lerp(
+                GetProperty(kf1, "translateY"),
+                GetProperty(kf2, "translateY"), easedT
+            )
+            local sc = Lerp(
+                GetProperty(kf1, "scale"),
+                GetProperty(kf2, "scale"), easedT
+            )
+            local al = Lerp(
+                GetProperty(kf1, "alpha"),
+                GetProperty(kf2, "alpha"), easedT
+            )
 
-        -- Check completion
-        if rawProgress >= 1.0 then
-            if not toRemove then toRemove = {} end
-            toRemove[#toRemove + 1] = frame
+            -- Apply to frame
+            ApplyToFrame(frame, state, tx, ty, sc, al)
+
+            -- Check completion with repeat support
+            if rawProgress >= 1.0 then
+                if state.repeatCount == 0
+                    or state.currentRepeat < state.repeatCount
+                then
+                    -- Reset for next repeat (no delay between repeats)
+                    state.startTime = now
+                    state.delay = 0
+                    state.currentRepeat = state.currentRepeat + 1
+                else
+                    if not toRemove then toRemove = {} end
+                    toRemove[#toRemove + 1] = frame
+                end
+            end
         end
     end
 
@@ -464,6 +515,9 @@ end)
 --- If the frame is already animating, the current animation is stopped
 --- (restoring the frame to its pre-animation state) before the new one starts.
 ---
+--- Supports `delay` to wait before starting and `repeatCount` to repeat
+--- (0 = infinite). If the frame has an active queue, the queue is cleared.
+---
 --- For exit animations, the frame is left at its final keyframe state when
 --- the animation completes. The consumer must handle cleanup (e.g. `frame:Hide()`)
 --- in the `onFinished` callback.
@@ -476,12 +530,14 @@ end)
 --- local LibAnimate = LibStub("LibAnimate")
 --- LibAnimate:Animate(myFrame, "fadeIn", {
 ---     duration = 0.5,
+---     delay = 0.2,
+---     repeatCount = 3,
 ---     onFinished = function(frame) print("done!") end,
 --- })
 --- ```
 ---@param frame Frame The frame to animate (must have one anchor point)
 ---@param name string Registered animation name
----@param opts AnimateOpts? Animation options (duration, distance, onFinished)
+---@param opts AnimateOpts? Animation options
 ---@return boolean success Always returns true on success; errors on invalid input
 function lib:Animate(frame, name, opts)
     opts = opts or {}
@@ -490,6 +546,9 @@ function lib:Animate(frame, name, opts)
     if lib.activeAnimations[frame] then
         self:Stop(frame)
     end
+
+    -- Clear any active queue on this frame
+    lib.animationQueues[frame] = nil
 
     local def = lib.animations[name]
     if not def then
@@ -530,6 +589,9 @@ function lib:Animate(frame, name, opts)
         startTime = GetTime(),
         duration = duration,
         distance = opts.distance or def.defaultDistance or 0,
+        delay = opts.delay or 0,
+        repeatCount = opts.repeatCount or 1,
+        currentRepeat = 1,
         onFinished = opts.onFinished,
         anchorPoint = pt,
         anchorRelativeTo = rel,
@@ -549,10 +611,14 @@ end
 
 --- Stops the animation on a frame and restores it to its pre-animation state.
 --- Restores the original anchor position, scale, and alpha captured at animation start.
---- Does nothing if the frame is not currently animating.
+--- If the frame has an active animation queue, the queue is also cleared.
+--- Does nothing if the frame is not currently animating and has no queue.
 --- The `onFinished` callback is NOT fired when an animation is stopped.
 ---@param frame Frame The frame to stop animating
 function lib:Stop(frame)
+    -- Clear any active queue on this frame
+    lib.animationQueues[frame] = nil
+
     local state = lib.activeAnimations[frame]
     if not state then return end
 
@@ -590,6 +656,109 @@ end
 ---@return boolean isAnimating True if the frame is currently animating
 function lib:IsAnimating(frame)
     return lib.activeAnimations[frame] ~= nil
+end
+
+-------------------------------------------------------------------------------
+-- Animation Queue
+-------------------------------------------------------------------------------
+
+--- Internal helper to start the next entry in an animation queue.
+--- Retrieves the current queue entry, builds options, and calls Animate
+--- with an internal onFinished that advances the queue.
+---@param self LibAnimate
+---@param frame Frame The frame being animated
+local function StartQueueEntry(self, frame)
+    local queue = self.animationQueues[frame]
+    if not queue then return end
+
+    local entry = queue.entries[queue.index]
+    if not entry then
+        -- Queue exhausted
+        local onFinished = queue.onFinished
+        self.animationQueues[frame] = nil
+        if onFinished then onFinished(frame) end
+        return
+    end
+
+    local opts = {
+        duration = entry.duration,
+        distance = entry.distance,
+        delay = entry.delay,
+        repeatCount = entry.repeatCount,
+        onFinished = function(f)
+            -- Fire per-step callback
+            if entry.onFinished then
+                entry.onFinished(f)
+            end
+            -- Advance queue
+            if self.animationQueues[f] then
+                self.animationQueues[f].index =
+                    self.animationQueues[f].index + 1
+                StartQueueEntry(self, f)
+            end
+        end,
+    }
+
+    -- Save/restore queue around Animate() since it clears queues
+    local savedQueue = self.animationQueues[frame]
+    self:Animate(frame, entry.name, opts)
+    self.animationQueues[frame] = savedQueue
+end
+
+--- Queues a sequence of animations to play one after another on a frame.
+--- Each entry can have its own duration, distance, delay, repeatCount,
+--- and onFinished callback.
+--- The sequence-level onFinished fires after the entire queue completes.
+---@param frame Frame The frame to animate
+---@param entries QueueEntry[] Array of animation steps
+---@param opts QueueOpts? Sequence-level options
+function lib:Queue(frame, entries, opts)
+    if type(entries) ~= "table" or #entries == 0 then
+        error("LibAnimate:Queue — entries must be a non-empty table", 2)
+    end
+
+    opts = opts or {}
+
+    -- Validate all animation names upfront
+    for i, entry in ipairs(entries) do
+        if type(entry.name) ~= "string"
+            or not lib.animations[entry.name]
+        then
+            error(
+                "LibAnimate:Queue — invalid animation name '"
+                    .. tostring(entry.name)
+                    .. "' at entry " .. i,
+                2
+            )
+        end
+    end
+
+    -- Stop any current animation and clear existing queue
+    self:Stop(frame)
+
+    -- Initialize the queue
+    lib.animationQueues[frame] = {
+        entries = entries,
+        index = 1,
+        onFinished = opts.onFinished,
+    }
+
+    StartQueueEntry(self, frame)
+end
+
+--- Cancels the animation queue on a frame and stops the current animation.
+--- The frame is restored to its pre-animation state. No callbacks are fired.
+---@param frame Frame The frame to cancel the queue on
+function lib:ClearQueue(frame)
+    lib.animationQueues[frame] = nil
+    self:Stop(frame)
+end
+
+--- Returns whether a frame has an active animation queue.
+---@param frame Frame The frame to check
+---@return boolean isQueued True if the frame has a pending queue
+function lib:IsQueued(frame)
+    return lib.animationQueues[frame] ~= nil
 end
 
 --- Returns the definition table for a registered animation.
