@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.1...2.0.2) (2026-02-22)
+
+
+### CI/CD
+
+* correct workflow use ([#7](https://github.com/Xerrion/LibAnimate-1.0/issues/7)) ([9d9725d](https://github.com/Xerrion/LibAnimate-1.0/commit/9d9725d5ecff53043503435f6900fcfdda618b38))
+
 ## [2.0.1](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.0...2.0.1) (2026-02-22)
 
 
