@@ -1,3 +1,16 @@
+## [3.1.0] - 2026-02-22
+
+### 🚀 Features
+
+- Add 45 animate.style animations (#22)
+
+### 🐛 Bug Fixes
+
+- EaseInOutBack clarity, FindKeyframes robustness, nil distance crash (#20)
+
+### 📚 Documentation
+
+- Document the lib api (#21)
 ## [3.0.1] - 2026-02-22
 
 ### ⚙️ Miscellaneous Tasks
@@ -5,6 +18,7 @@
 - Fix-changelog-generation
 - Add ignored files
 - Add ignored files (#17)
+- Release 3.0.1 (#18)
 ## [3.0.0] - 2026-02-22
 
 ### ⚙️ Miscellaneous Tasks
