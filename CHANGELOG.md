@@ -1,52 +1,56 @@
-# Changelog
+## [3.0.0] - 2026-02-22
 
-## [2.1.0](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.3...2.1.0) (2026-02-22)
+### ⚙️ Miscellaneous Tasks
 
+- Migrate from release-please to git-cliff (#13)
+- [**breaking**] Rebrand from LibAnimate-1.0 to LibAnimate (#14)
+- Fix-changelog-generation (#16)
+## [2.1.0] - 2026-02-22
 
-### Features
+### 🚀 Features
 
-* add fade and move animations ([#11](https://github.com/Xerrion/LibAnimate-1.0/issues/11)) ([99a0e33](https://github.com/Xerrion/LibAnimate-1.0/commit/99a0e33139d6f269c474c615e67dc0a1872cf734))
+- Add fade and move animations (#11)
 
-## [2.0.3](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.2...2.0.3) (2026-02-22)
+### ⚙️ Miscellaneous Tasks
 
+- *(master)* Release 2.1.0 (#12)
+## [2.0.3] - 2026-02-22
 
-### Miscellaneous
+### ⚙️ Miscellaneous Tasks
 
-* add metadata to toc ([#9](https://github.com/Xerrion/LibAnimate-1.0/issues/9)) ([4f30627](https://github.com/Xerrion/LibAnimate-1.0/commit/4f30627206847c50fb9d69088576b65fa88f3a16))
+- Add metadata to toc (#9)
+- *(master)* Release 2.0.3 (#10)
+## [2.0.2] - 2026-02-22
 
-## [2.0.2](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.1...2.0.2) (2026-02-22)
+### ⚙️ Miscellaneous Tasks
 
+- Correct workflow use (#7)
+- *(master)* Release 2.0.2 (#8)
+## [2.0.1] - 2026-02-22
 
-### CI/CD
+### 🐛 Bug Fixes
 
-* correct workflow use ([#7](https://github.com/Xerrion/LibAnimate-1.0/issues/7)) ([9d9725d](https://github.com/Xerrion/LibAnimate-1.0/commit/9d9725d5ecff53043503435f6900fcfdda618b38))
+- Use BigWigsMods/packager@v2 (v3 does not exist) (#5)
 
-## [2.0.1](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.0...2.0.1) (2026-02-22)
+### ⚙️ Miscellaneous Tasks
 
+- *(master)* Release 2.0.1 (#6)
+## [2.0.0] - 2026-02-22
 
-### Bug Fixes
+### 🐛 Bug Fixes
 
-* use BigWigsMods/packager@v2 (v3 does not exist) ([#5](https://github.com/Xerrion/LibAnimate-1.0/issues/5)) ([53db571](https://github.com/Xerrion/LibAnimate-1.0/commit/53db5717dfa69b5c046c1b40ad2541024acbf166))
+- [**breaking**] Address code review findings (#3)
 
-## [2.0.0](https://github.com/Xerrion/LibAnimate-1.0/compare/1.0.0...2.0.0) (2026-02-22)
+### ⚙️ Miscellaneous Tasks
 
+- *(master)* Release 2.0.0 (#4)
+## [1.0.0] - 2026-02-22
 
-### ⚠ BREAKING CHANGES
+### 🚀 Features
 
-* Keyframe definitions now use 'progress' field instead of 'time'
+- LibAnimate-1.0 initial implementation (#1)
 
-### Bug Fixes
+### ⚙️ Miscellaneous Tasks
 
-* address code review findings ([#3](https://github.com/Xerrion/LibAnimate-1.0/issues/3)) ([1067e6d](https://github.com/Xerrion/LibAnimate-1.0/commit/1067e6d53988eae0640082d7481f5d11f2d503c3))
-
-## 1.0.0 (2026-02-22)
-
-
-### Features
-
-* LibAnimate-1.0 initial implementation ([#1](https://github.com/Xerrion/LibAnimate-1.0/issues/1)) ([0d8fc94](https://github.com/Xerrion/LibAnimate-1.0/commit/0d8fc94544356e2810364f7e3a866225a2d932fc))
-
-
-### Miscellaneous
-
-* initialize repository ([1de43cb](https://github.com/Xerrion/LibAnimate-1.0/commit/1de43cb069de2c4dcd960b2330b71b5a02fbbb3a))
+- Initialize repository
+- *(master)* Release 1.0.0 (#2)
