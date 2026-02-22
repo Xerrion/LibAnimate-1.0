@@ -1,0 +1,16 @@
+package-as: LibAnimate-1.0
+enable-toc-creation: yes
+
+externals:
+  LibStub: https://repos.wowace.com/wow/libstub/trunk
+
+ignore:
+  - README.md
+  - .github
+  - .gitignore
+  - .luacheckrc
+  - .release
+  - "*.md"
+  - release-please-config.json
+  - .release-please-manifest.json
+  - AGENTS.md

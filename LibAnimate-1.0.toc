@@ -1,0 +1,11 @@
+## Interface: 110207
+## Interface-BCC: 20505
+## Interface-Mists: 50503
+## Title: Lib: Animate-1.0
+## Notes: Keyframe-driven animation library for WoW frames, inspired by animate.css
+## Author: Xerrion
+## Version: @project-version@
+## X-Category: Library
+## X-License: MIT
+
+lib.xml

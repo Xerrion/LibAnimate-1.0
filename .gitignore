@@ -1,0 +1,8 @@
+.env
+.release/
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.iml

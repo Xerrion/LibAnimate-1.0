@@ -1,0 +1,15 @@
+name: Lint
+
+on:
+  pull_request_target:
+  push:
+    branches: [master]
+
+jobs:
+  luacheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nebularg/actions-luacheck@v1
+        with:
+          args: "--no-color"
