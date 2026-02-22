@@ -13,3 +13,7 @@ ignore:
   - "*.md"
   - cliff.toml
   - AGENTS.md
+  - icon.png
+  - CHANGELOG.md
+  - AGENTS.md
+
