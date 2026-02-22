@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.3](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.2...2.0.3) (2026-02-22)
+
+
+### Miscellaneous
+
+* add metadata to toc ([#9](https://github.com/Xerrion/LibAnimate-1.0/issues/9)) ([4f30627](https://github.com/Xerrion/LibAnimate-1.0/commit/4f30627206847c50fb9d69088576b65fa88f3a16))
+
 ## [2.0.2](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.1...2.0.2) (2026-02-22)
 
 
