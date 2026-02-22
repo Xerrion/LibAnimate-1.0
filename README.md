@@ -12,7 +12,7 @@ LibAnimate-1.0 is a standalone, LibStub-based animation library that provides sm
 - **Single shared driver frame** — All animations run through one OnUpdate handler for efficiency
 - **Keyframe interpolation** — Define animations as a series of keyframes with progress, translate, scale, and alpha
 - **Per-segment easing** — Each keyframe segment can use a different easing function or custom cubic-bezier curve
-- **26 built-in animations** — Slide, zoom, and back-style entrance/exit animations out of the box
+- **32 built-in animations** — Slide, zoom, back, fade, and move-style entrance/exit animations out of the box
 - **Extensible** — Register custom animations via `RegisterAnimation`
 
 **Supported WoW versions:** Retail, MoP Classic, TBC Anniversary, Classic Era
@@ -233,6 +233,12 @@ Registers a custom animation definition. Can also override built-in animations.
 | zoomOutUp | exit | 0.5s | 400 | Zooms out upward |
 | zoomOutLeft | exit | 0.5s | 400 | Zooms out to the left |
 | zoomOutRight | exit | 0.5s | 400 | Zooms out to the right |
+| fadeIn | entrance | 0.3s | 0 | Fades in from transparent |
+| fadeOut | exit | 0.3s | 0 | Fades out to transparent |
+| moveUp | entrance | 0.2s | 50 | Moves up into position |
+| moveDown | entrance | 0.2s | 50 | Moves down into position |
+| moveLeft | entrance | 0.2s | 50 | Moves left into position |
+| moveRight | entrance | 0.2s | 50 | Moves right into position |
 
 ## Custom Animations
 

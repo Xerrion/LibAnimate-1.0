@@ -309,3 +309,75 @@ lib:RegisterAnimation("zoomOutRight", {
         { progress = 1.0, translateX = 1.0, scale = 0.1, alpha = 0 },
     },
 })
+
+-------------------------------------------------------------------------------
+-- Fading Entrances
+-------------------------------------------------------------------------------
+
+lib:RegisterAnimation("fadeIn", {
+    type = "entrance",
+    defaultDuration = 0.3,
+    defaultDistance = 0,
+    keyframes = {
+        { progress = 0.0, alpha = 0 },
+        { progress = 1.0, alpha = 1.0 },
+    },
+})
+
+-------------------------------------------------------------------------------
+-- Fading Exits
+-------------------------------------------------------------------------------
+
+lib:RegisterAnimation("fadeOut", {
+    type = "exit",
+    defaultDuration = 0.3,
+    defaultDistance = 0,
+    keyframes = {
+        { progress = 0.0, alpha = 1.0 },
+        { progress = 1.0, alpha = 0 },
+    },
+})
+
+-------------------------------------------------------------------------------
+-- Move Entrances (smooth repositioning with easeOutQuad)
+-------------------------------------------------------------------------------
+
+lib:RegisterAnimation("moveUp", {
+    type = "entrance",
+    defaultDuration = 0.2,
+    defaultDistance = 50,
+    keyframes = {
+        { progress = 0.0, translateY = -1.0, easing = "easeOutQuad" },
+        { progress = 1.0, translateY = 0 },
+    },
+})
+
+lib:RegisterAnimation("moveDown", {
+    type = "entrance",
+    defaultDuration = 0.2,
+    defaultDistance = 50,
+    keyframes = {
+        { progress = 0.0, translateY = 1.0, easing = "easeOutQuad" },
+        { progress = 1.0, translateY = 0 },
+    },
+})
+
+lib:RegisterAnimation("moveLeft", {
+    type = "entrance",
+    defaultDuration = 0.2,
+    defaultDistance = 50,
+    keyframes = {
+        { progress = 0.0, translateX = 1.0, easing = "easeOutQuad" },
+        { progress = 1.0, translateX = 0 },
+    },
+})
+
+lib:RegisterAnimation("moveRight", {
+    type = "entrance",
+    defaultDuration = 0.2,
+    defaultDistance = 50,
+    keyframes = {
+        { progress = 0.0, translateX = -1.0, easing = "easeOutQuad" },
+        { progress = 1.0, translateX = 0 },
+    },
+})

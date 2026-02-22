@@ -6,7 +6,7 @@
 -- Supported versions: Retail, TBC Anniversary, MoP Classic
 -------------------------------------------------------------------------------
 
-local MAJOR, MINOR = "LibAnimate-1.0", 2
+local MAJOR, MINOR = "LibAnimate-1.0", 3
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
