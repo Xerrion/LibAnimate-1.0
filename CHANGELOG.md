@@ -1,3 +1,8 @@
+## [3.4.0] - 2026-02-22
+
+### 🚀 Features
+
+- Bundle LibStub directly in repo (#29)
 ## [3.3.0] - 2026-02-22
 
 ### 🚀 Features
@@ -5,6 +10,10 @@
 - Add delay, repeatCount, and animation queue support
 - Add delay, repeatCount, and animation queue support (#27)
 - Add PauseQueue, ResumeQueue, IsPaused, SlideAnchor, SkipToEntry, RemoveQueueEntry
+
+### ⚙️ Miscellaneous Tasks
+
+- Release 3.3.0 (#28)
 ## [3.2.0] - 2026-02-22
 
 ### 🚀 Features
