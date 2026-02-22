@@ -14,7 +14,7 @@ read_globals = {
     "select", "next", "error", "unpack", "abs",
 
     -- WoW API
-    "CreateFrame", "GetTime", "UIParent",
+    "CreateFrame", "GetTime", "UIParent", "geterrorhandler",
 
     -- Libraries
     "LibStub",

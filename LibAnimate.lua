@@ -83,12 +83,14 @@ if not lib then return end
 
 local GetTime = GetTime
 local CreateFrame = CreateFrame
+local geterrorhandler = geterrorhandler
 local pairs = pairs
 local next = next
 local ipairs = ipairs
 local type = type
 local math_min = math.min
 local math_abs = math.abs
+local math_floor = math.floor
 local table_sort = table.sort
 
 -------------------------------------------------------------------------------
@@ -540,6 +542,9 @@ end)
 ---@param opts AnimateOpts? Animation options
 ---@return boolean success Always returns true on success; errors on invalid input
 function lib:Animate(frame, name, opts)
+    if opts ~= nil and type(opts) ~= "table" then
+        error("LibAnimate: opts must be a table or nil", 2)
+    end
     opts = opts or {}
 
     -- Stop existing animation on this frame
@@ -583,14 +588,24 @@ function lib:Animate(frame, name, opts)
         end
     end
 
+    local delay = opts.delay or 0
+    if type(delay) ~= "number" or delay < 0 then
+        error("LibAnimate: delay must be a non-negative number", 2)
+    end
+
+    local repeatCount = opts.repeatCount or 1
+    if type(repeatCount) ~= "number" or repeatCount < 0 or repeatCount ~= math_floor(repeatCount) then
+        error("LibAnimate: repeatCount must be 0 (infinite) or a positive integer", 2)
+    end
+
     local state = {
         definition = def,
         keyframes = def.keyframes,
         startTime = GetTime(),
         duration = duration,
         distance = opts.distance or def.defaultDistance or 0,
-        delay = opts.delay or 0,
-        repeatCount = opts.repeatCount or 1,
+        delay = delay,
+        repeatCount = repeatCount,
         currentRepeat = 1,
         onFinished = opts.onFinished,
         anchorPoint = pt,
@@ -686,9 +701,12 @@ local function StartQueueEntry(self, frame)
         delay = entry.delay,
         repeatCount = entry.repeatCount,
         onFinished = function(f)
-            -- Fire per-step callback
+            -- Fire per-step callback (pcall so queue always advances)
             if entry.onFinished then
-                entry.onFinished(f)
+                local ok, err = pcall(entry.onFinished, f)
+                if not ok then
+                    geterrorhandler()(err)
+                end
             end
             -- Advance queue
             if self.animationQueues[f] then
@@ -713,10 +731,16 @@ end
 ---@param entries QueueEntry[] Array of animation steps
 ---@param opts QueueOpts? Sequence-level options
 function lib:Queue(frame, entries, opts)
+    if not frame then
+        error("LibAnimate:Queue — frame must not be nil", 2)
+    end
     if type(entries) ~= "table" or #entries == 0 then
         error("LibAnimate:Queue — entries must be a non-empty table", 2)
     end
 
+    if opts ~= nil and type(opts) ~= "table" then
+        error("LibAnimate:Queue — opts must be a table or nil", 2)
+    end
     opts = opts or {}
 
     -- Validate all animation names upfront
