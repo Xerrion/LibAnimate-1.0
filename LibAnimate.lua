@@ -1,12 +1,12 @@
 -------------------------------------------------------------------------------
--- LibAnimate-1.0
+-- LibAnimate
 -- Keyframe-driven animation library for World of Warcraft frames
 -- Inspired by animate.css (https://animate.style)
 --
 -- Supported versions: Retail, TBC Anniversary, MoP Classic
 -------------------------------------------------------------------------------
 
-local MAJOR, MINOR = "LibAnimate-1.0", 3
+local MAJOR, MINOR = "LibAnimate", 1
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -342,18 +342,18 @@ function lib:Animate(frame, name, opts)
 
     local def = lib.animations[name]
     if not def then
-        error("LibAnimate-1.0: Unknown animation '" .. tostring(name) .. "'", 2)
+        error("LibAnimate: Unknown animation '" .. tostring(name) .. "'", 2)
     end
 
     local duration = opts.duration or def.defaultDuration
     if not duration or duration <= 0 then
-        error("LibAnimate-1.0: Animation duration must be greater than 0", 2)
+        error("LibAnimate: Animation duration must be greater than 0", 2)
     end
 
     -- Capture current anchor
     local pt, rel, relPt, x, y = frame:GetPoint()
     if not pt then
-        error("LibAnimate-1.0: Frame has no anchor point set", 2)
+        error("LibAnimate: Frame has no anchor point set", 2)
     end
 
     local originalScale = frame:GetScale()
@@ -461,37 +461,37 @@ end
 
 function lib:RegisterAnimation(name, definition)
     if type(name) ~= "string" then
-        error("LibAnimate-1.0: Animation name must be a string", 2)
+        error("LibAnimate: Animation name must be a string", 2)
     end
     if type(definition) ~= "table" then
-        error("LibAnimate-1.0: Animation definition must be a table", 2)
+        error("LibAnimate: Animation definition must be a table", 2)
     end
     if not definition.type then
-        error("LibAnimate-1.0: Animation definition must have a 'type' field ('entrance' or 'exit')", 2)
+        error("LibAnimate: Animation definition must have a 'type' field ('entrance' or 'exit')", 2)
     end
     if not definition.keyframes or #definition.keyframes < 2 then
-        error("LibAnimate-1.0: Animation must have at least 2 keyframes", 2)
+        error("LibAnimate: Animation must have at least 2 keyframes", 2)
     end
 
     -- Validate keyframe ordering
     local keyframes = definition.keyframes
     for i = 2, #keyframes do
         if keyframes[i].progress < keyframes[i - 1].progress then
-            error("LibAnimate-1.0: Keyframes must be sorted by progress (ascending)", 2)
+            error("LibAnimate: Keyframes must be sorted by progress (ascending)", 2)
         end
     end
 
     -- Validate boundaries
     if keyframes[1].progress ~= 0.0 then
-        error("LibAnimate-1.0: First keyframe must have progress = 0.0", 2)
+        error("LibAnimate: First keyframe must have progress = 0.0", 2)
     end
     if keyframes[#keyframes].progress ~= 1.0 then
-        error("LibAnimate-1.0: Last keyframe must have progress = 1.0", 2)
+        error("LibAnimate: Last keyframe must have progress = 1.0", 2)
     end
 
     -- Validate defaultDuration if provided
     if definition.defaultDuration and definition.defaultDuration <= 0 then
-        error("LibAnimate-1.0: defaultDuration must be greater than 0", 2)
+        error("LibAnimate: defaultDuration must be greater than 0", 2)
     end
 
     lib.animations[name] = definition

@@ -1,4 +1,4 @@
-package-as: LibAnimate-1.0
+package-as: LibAnimate
 enable-toc-creation: yes
 
 externals:

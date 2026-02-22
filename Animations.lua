@@ -1,12 +1,12 @@
 -------------------------------------------------------------------------------
 -- Animations.lua
--- Built-in animation definitions for LibAnimate-1.0
+-- Built-in animation definitions for LibAnimate
 -- Adapted from animate.css (https://animate.style) by Daniel Eden
 --
 -- Supported versions: Retail, TBC Anniversary, MoP Classic
 -------------------------------------------------------------------------------
 
-local lib = LibStub("LibAnimate-1.0")
+local lib = LibStub("LibAnimate")
 
 -------------------------------------------------------------------------------
 -- Back Entrances (defaultDuration=0.6, defaultDistance=300)

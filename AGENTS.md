@@ -1,4 +1,4 @@
-# LibAnimate-1.0 — Agent Guidelines
+# LibAnimate — Agent Guidelines
 
 A standalone, LibStub-based WoW animation library providing keyframe-driven animations for any WoW frame, inspired by animate.css.
 
@@ -13,10 +13,10 @@ A standalone, LibStub-based WoW animation library providing keyframe-driven anim
 ### Files
 | File | Purpose |
 |------|---------|
-| `LibAnimate-1.0.lua` | Engine, API, easing functions |
+| `LibAnimate.lua` | Engine, API, easing functions |
 | `Animations.lua` | 24 built-in animation definitions |
 | `lib.xml` | XML loader (load order) |
-| `LibAnimate-1.0.toc` | Standalone TOC |
+| `LibAnimate.toc` | Standalone TOC |
 
 ### Supported Versions
 - Retail (110207)

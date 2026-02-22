@@ -1,10 +1,10 @@
-# LibAnimate-1.0
+# LibAnimate
 
 A keyframe-driven animation library for World of Warcraft addons, inspired by [animate.css](https://animate.style/).
 
 ## Overview
 
-LibAnimate-1.0 is a standalone, LibStub-based animation library that provides smooth, keyframe-driven animations for any WoW frame. It uses an **OnUpdate-based rendering engine** rather than WoW's built-in Animation/AnimationGroup system, which suffers from long-standing bugs with alpha persistence and Translation offset semantics.
+LibAnimate is a standalone, LibStub-based animation library that provides smooth, keyframe-driven animations for any WoW frame. It uses an **OnUpdate-based rendering engine** rather than WoW's built-in Animation/AnimationGroup system, which suffers from long-standing bugs with alpha persistence and Translation offset semantics.
 
 **Key features:**
 
@@ -28,15 +28,15 @@ externals:
   Libs/LibStub:
     url: https://repos.wowace.com/wow/libstub/trunk
     tag: latest
-  Libs/LibAnimate-1.0:
-    url: https://github.com/Xerrion/LibAnimate-1.0
+  Libs/LibAnimate:
+    url: https://github.com/Xerrion/LibAnimate
 ```
 
 Then in your `.toc` file:
 
 ```
 Libs\LibStub\LibStub.lua
-Libs\LibAnimate-1.0\lib.xml
+Libs\LibAnimate\lib.xml
 ```
 
 ### Manual
@@ -45,13 +45,13 @@ Download the library and place it in your addon's `Libs/` folder. Load `lib.xml`
 
 ```
 Libs\LibStub\LibStub.lua
-Libs\LibAnimate-1.0\lib.xml
+Libs\LibAnimate\lib.xml
 ```
 
 ## Quick Start
 
 ```lua
-local LibAnimate = LibStub("LibAnimate-1.0")
+local LibAnimate = LibStub("LibAnimate")
 
 -- Animate a frame sliding in from the top
 local myFrame = CreateFrame("Frame", nil, UIParent)
@@ -245,7 +245,7 @@ Registers a custom animation definition. Can also override built-in animations.
 You can register your own animations using `RegisterAnimation`. Animations are defined as a series of keyframes that the library interpolates between during playback.
 
 ```lua
-local LibAnimate = LibStub("LibAnimate-1.0")
+local LibAnimate = LibStub("LibAnimate")
 
 -- Custom "bounceIn" animation
 LibAnimate:RegisterAnimation("bounceIn", {
