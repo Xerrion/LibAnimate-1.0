@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/Xerrion/LibAnimate-1.0/compare/1.0.0...2.0.0) (2026-02-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* Keyframe definitions now use 'progress' field instead of 'time'
+
+### Bug Fixes
+
+* address code review findings ([#3](https://github.com/Xerrion/LibAnimate-1.0/issues/3)) ([1067e6d](https://github.com/Xerrion/LibAnimate-1.0/commit/1067e6d53988eae0640082d7481f5d11f2d503c3))
+
 ## 1.0.0 (2026-02-22)
 
 
