@@ -22,7 +22,7 @@ if not lib then return end
 ---@field ApplyEasing fun(easing: EasingSpec, t: number): number
 
 ---@class AnimationDefinition
----@field type "entrance"|"exit" Animation category
+---@field type "entrance"|"exit"|"attention" Animation category
 ---@field defaultDuration number? Default duration in seconds
 ---@field defaultDistance number? Default translation distance in pixels
 ---@field keyframes Keyframe[] Ordered list of keyframes (progress 0.0 to 1.0)
@@ -467,6 +467,9 @@ end)
 --- the animation completes. The consumer must handle cleanup (e.g. `frame:Hide()`)
 --- in the `onFinished` callback.
 ---
+--- For attention-seeker animations, the frame returns to its original state
+--- when the animation completes (keyframes start and end at identity values).
+---
 --- Usage:
 --- ```lua
 --- local LibAnimate = LibStub("LibAnimate")
@@ -626,6 +629,19 @@ function lib:GetExitAnimations()
     for animName, def in pairs(lib.animations) do
         if def.type == "exit" then
             names[#names + 1] = animName
+        end
+    end
+    table_sort(names)
+    return names
+end
+
+--- Returns a sorted list of all registered attention-seeker animation names.
+---@return string[] names Alphabetically sorted attention animation names
+function lib:GetAttentionAnimations()
+    local names = {}
+    for name, def in pairs(lib.animations) do
+        if def.type == "attention" then
+            names[#names + 1] = name
         end
     end
     table_sort(names)
