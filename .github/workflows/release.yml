@@ -7,40 +7,76 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag to package (e.g. 1.1.2)'
+        description: "Tag to package (e.g. 1.1.2)"
         required: true
         type: string
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  release-please:
-    if: ${{ github.event_name != 'workflow_dispatch' }}
+  changelog:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
+      release_needed: ${{ steps.check.outputs.release_needed }}
+      tag: ${{ steps.check.outputs.tag }}
     steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine next version
+        id: cliff
+        uses: orhun/git-cliff-action@v4
+        with:
+          args: --bumped-version
+
+      - name: Check if release needed
+        id: check
+        run: |
+          CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          NEXT_VERSION="${{ steps.cliff.outputs.version }}"
+          echo "Current: $CURRENT_TAG, Next: $NEXT_VERSION"
+          if [ "$CURRENT_TAG" = "$NEXT_VERSION" ] || [ -z "$NEXT_VERSION" ]; then
+            echo "release_needed=false" >> $GITHUB_OUTPUT
+          else
+            echo "release_needed=true" >> $GITHUB_OUTPUT
+            echo "tag=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
+        if: steps.check.outputs.release_needed == 'true'
+        uses: orhun/git-cliff-action@v4
+        with:
+          args: --output CHANGELOG.md
+
+      - name: Commit and tag
+        if: steps.check.outputs.release_needed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git diff --staged --quiet || git commit -m "chore: update changelog for ${{ steps.check.outputs.tag }}"
+          git tag ${{ steps.check.outputs.tag }}
+          git push origin master --tags
 
   package:
-    needs: release-please
-    if: ${{ always() && (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch') }}
+    needs: changelog
+    if: |
+      always() &&
+      (needs.changelog.outputs.release_needed == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     env:
       CF_API_KEY: ${{ secrets.CF_API_KEY }}
-      WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
       WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
       GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - name: Clone project
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag_name || github.event.inputs.tag_name }}
+          ref: ${{ needs.changelog.outputs.tag || github.event.inputs.tag_name }}
           fetch-depth: 0
 
-      - name: Package and release
-        uses: BigWigsMods/packager@v2
+      - uses: BigWigsMods/packager@v2
+        env:
+          GITHUB_REF: refs/tags/${{ needs.changelog.outputs.tag || github.event.inputs.tag_name }}
