@@ -11,6 +11,54 @@ local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
 -------------------------------------------------------------------------------
+-- Type Definitions
+-------------------------------------------------------------------------------
+
+---@class LibAnimate
+---@field animations table<string, AnimationDefinition> Registered animation definitions
+---@field activeAnimations table<Frame, AnimationState> Currently running animations
+---@field easings table<string, fun(t: number): number> Named easing presets
+---@field CubicBezier fun(p1x: number, p1y: number, p2x: number, p2y: number): fun(t: number): number
+---@field ApplyEasing fun(easing: EasingSpec, t: number): number
+
+---@class AnimationDefinition
+---@field type "entrance"|"exit" Animation category
+---@field defaultDuration number? Default duration in seconds
+---@field defaultDistance number? Default translation distance in pixels
+---@field keyframes Keyframe[] Ordered list of keyframes (progress 0.0 to 1.0)
+
+---@class Keyframe
+---@field progress number Normalized time position (0.0 to 1.0)
+---@field translateX number? Horizontal offset as fraction of distance (default 0)
+---@field translateY number? Vertical offset as fraction of distance (default 0)
+---@field scale number? Uniform scale factor (default 1.0)
+---@field alpha number? Opacity (default 1.0)
+---@field easing EasingSpec? Easing for the segment STARTING at this keyframe
+
+---@alias EasingSpec string|number[] A named preset (e.g. "easeOutCubic") or cubic-bezier control points {p1x, p1y, p2x, p2y}
+
+---@class AnimateOpts
+---@field duration number? Override animation duration in seconds
+---@field distance number? Override translation distance in pixels
+---@field onFinished fun(frame: Frame)? Callback fired when the animation completes naturally
+
+---@class AnimationState
+---@field definition AnimationDefinition
+---@field keyframes Keyframe[]
+---@field startTime number GetTime() at animation start
+---@field duration number Active duration in seconds
+---@field distance number Translation distance in pixels
+---@field onFinished fun(frame: Frame)?
+---@field anchorPoint string Captured anchor point
+---@field anchorRelativeTo Frame? Captured relative-to frame
+---@field anchorRelativePoint string Captured relative point
+---@field anchorX number Captured anchor X offset
+---@field anchorY number Captured anchor Y offset
+---@field originalScale number Pre-animation scale
+---@field originalAlpha number Pre-animation alpha
+---@field resolvedEasings table<integer, fun(t: number): number>
+
+-------------------------------------------------------------------------------
 -- Cached Globals
 -------------------------------------------------------------------------------
 
@@ -41,6 +89,15 @@ local driverFrame = lib.driverFrame
 -- Easing Functions
 -------------------------------------------------------------------------------
 
+--- Named easing presets mapping string names to easing functions.
+--- Each function takes a normalized time `t` in [0, 1] and returns the eased value.
+---
+--- Available presets:
+--- - `"linear"` — No easing
+--- - `"easeInQuad"`, `"easeOutQuad"`, `"easeInOutQuad"` — Quadratic
+--- - `"easeInCubic"`, `"easeOutCubic"`, `"easeInOutCubic"` — Cubic
+--- - `"easeInBack"`, `"easeOutBack"`, `"easeInOutBack"` — Back (overshoot)
+---@type table<string, fun(t: number): number>
 lib.easings = {
     linear = function(t)
         return t
@@ -106,19 +163,39 @@ lib.easings = {
 -- Cubic-Bezier Solver
 -------------------------------------------------------------------------------
 
+--- Creates a cubic-bezier easing function from four control points.
+--- Uses Newton-Raphson iteration with binary-search fallback.
+---@param p1x number X of first control point (0-1)
+---@param p1y number Y of first control point
+---@param p2x number X of second control point (0-1)
+---@param p2y number Y of second control point
+---@return fun(t: number): number easingFn Easing function mapping [0,1] to [0,1]
 local function CubicBezier(p1x, p1y, p2x, p2y)
+    --- Evaluates the X component of the cubic bezier at parameter t.
+    ---@param t number Bezier parameter (0-1)
+    ---@return number x X coordinate on the bezier curve
     local function sampleCurveX(t)
         return (((1 - 3 * p2x + 3 * p1x) * t + (3 * p2x - 6 * p1x)) * t + 3 * p1x) * t
     end
 
+    --- Evaluates the Y component (output value) of the cubic bezier at parameter t.
+    ---@param t number Bezier parameter (0-1)
+    ---@return number y Y coordinate on the bezier curve
     local function sampleCurveY(t)
         return (((1 - 3 * p2y + 3 * p1y) * t + (3 * p2y - 6 * p1y)) * t + 3 * p1y) * t
     end
 
+    --- Evaluates the derivative of the X component at parameter t (for Newton-Raphson).
+    ---@param t number Bezier parameter (0-1)
+    ---@return number dx Derivative of X with respect to t
     local function sampleCurveDerivativeX(t)
         return (3 * (1 - 3 * p2x + 3 * p1x) * t + 2 * (3 * p2x - 6 * p1x)) * t + 3 * p1x
     end
 
+    --- Finds the bezier parameter t that produces a given X value.
+    --- Uses Newton-Raphson iteration (8 steps) with binary-search fallback (20 steps).
+    ---@param x number Target X value (0-1)
+    ---@return number t Bezier parameter that maps to x
     local function solveCurveX(x)
         -- Newton-Raphson
         local t = x
@@ -152,6 +229,9 @@ local function CubicBezier(p1x, p1y, p2x, p2y)
         return t
     end
 
+    --- Returned easing function: maps a normalized progress value through the bezier curve.
+    ---@param x number Normalized progress (0-1), clamped at boundaries
+    ---@return number y Eased progress value
     return function(x)
         if x <= 0 then return 0 end
         if x >= 1 then return 1 end
@@ -165,8 +245,12 @@ lib.CubicBezier = CubicBezier
 -- ApplyEasing Helper
 -------------------------------------------------------------------------------
 
--- NOTE: This function is kept as a utility for future API use.
--- The hot-path (OnUpdate) uses pre-resolved easing functions instead.
+--- Applies an easing function to a progress value.
+--- Accepts a named preset string or a cubic-bezier control point table.
+--- This is a utility function; the hot-path uses pre-resolved easing functions instead.
+---@param easing EasingSpec Easing preset name or {p1x, p1y, p2x, p2y}
+---@param t number Normalized progress (0-1)
+---@return number easedT Eased progress value
 local function ApplyEasing(easing, t)
     if type(easing) == "string" then
         local fn = lib.easings[easing]
@@ -185,6 +269,9 @@ lib.ApplyEasing = ApplyEasing
 -- Keyframe Interpolation
 -------------------------------------------------------------------------------
 
+--- Default values for keyframe properties when not explicitly set.
+--- Used by `GetProperty` to fill in missing values during interpolation.
+---@type table<string, number>
 local PROPERTY_DEFAULTS = {
     translateX = 0,
     translateY = 0,
@@ -192,6 +279,15 @@ local PROPERTY_DEFAULTS = {
     alpha = 1.0,
 }
 
+--- Finds the two bracketing keyframes for a given progress value.
+--- Returns the start and end keyframes of the active segment, the interpolation
+--- progress within that segment, and the index of the start keyframe.
+---@param keyframes Keyframe[] Ordered keyframe list (progress 0.0 to 1.0)
+---@param progress number Normalized animation progress (0-1)
+---@return Keyframe kf1 Start keyframe of the active segment
+---@return Keyframe kf2 End keyframe of the active segment
+---@return number segmentProgress Interpolation progress within the segment (0-1)
+---@return integer kf1Index Index of kf1 in the keyframes array
 local function FindKeyframes(keyframes, progress)
     -- Handle boundary cases explicitly
     if progress <= 0 then
@@ -224,6 +320,10 @@ local function FindKeyframes(keyframes, progress)
     return keyframes[n - 1], keyframes[n], 1, n - 1
 end
 
+--- Returns a keyframe property value, falling back to PROPERTY_DEFAULTS if not set.
+---@param kf Keyframe The keyframe to read from
+---@param name string Property name ("translateX", "translateY", "scale", or "alpha")
+---@return number value The property value
 local function GetProperty(kf, name)
     if kf[name] ~= nil then
         return kf[name]
@@ -231,6 +331,11 @@ local function GetProperty(kf, name)
     return PROPERTY_DEFAULTS[name]
 end
 
+--- Linearly interpolates between two values.
+---@param a number Start value
+---@param b number End value
+---@param t number Interpolation factor (0 = a, 1 = b)
+---@return number result Interpolated value
 local function Lerp(a, b, t)
     return a + (b - a) * t
 end
@@ -239,8 +344,18 @@ end
 -- ApplyToFrame
 -------------------------------------------------------------------------------
 
+--- Applies interpolated animation properties to a frame.
+--- Computes the final anchor offset from translation fractions and distance,
+--- repositions the frame, and sets scale and alpha. Scale is clamped to a
+--- minimum of 0.001 to prevent WoW `SetScale(0)` errors.
+---@param frame Frame The frame being animated
+---@param state AnimationState The active animation state
+---@param tx number Interpolated translateX (fraction of distance)
+---@param ty number Interpolated translateY (fraction of distance)
+---@param sc number Interpolated scale factor
+---@param al number Interpolated alpha (opacity)
 local function ApplyToFrame(frame, state, tx, ty, sc, al)
-    local distance = state.distance
+    local distance = state.distance or 0
 
     local offsetX = tx * distance
     local offsetY = ty * distance
@@ -259,6 +374,11 @@ end
 -- Driver Frame OnUpdate
 -------------------------------------------------------------------------------
 
+--- Main animation driver. Runs every frame while any animation is active.
+--- For each active animation: advances progress, finds bracketing keyframes,
+--- applies per-segment easing, interpolates properties, and applies to the frame.
+--- Completed animations are snapped to final state and their callbacks are fired
+--- in a deferred pass (after all state cleanup) to prevent re-entrancy issues.
 driverFrame:SetScript("OnUpdate", function()
     local now = GetTime()
     local toRemove = nil
@@ -334,13 +454,31 @@ end)
 -- Public API
 -------------------------------------------------------------------------------
 
---- Plays a named animation on a frame.
--- The frame must have exactly one anchor point set via SetPoint().
--- Frames with multiple anchor points (two-point sizing) are not supported
--- and will lose their secondary anchors during animation.
--- For exit animations, the frame is left at its final keyframe state when
--- the animation completes. The consumer must handle cleanup (e.g., frame:Hide())
--- in the onFinished callback.
+--- Plays a registered animation on a frame.
+---
+--- The frame must have exactly one anchor point set via `SetPoint()`.
+--- Frames with multiple anchor points (two-point sizing) are not supported
+--- and will lose their secondary anchors during animation.
+---
+--- If the frame is already animating, the current animation is stopped
+--- (restoring the frame to its pre-animation state) before the new one starts.
+---
+--- For exit animations, the frame is left at its final keyframe state when
+--- the animation completes. The consumer must handle cleanup (e.g. `frame:Hide()`)
+--- in the `onFinished` callback.
+---
+--- Usage:
+--- ```lua
+--- local LibAnimate = LibStub("LibAnimate")
+--- LibAnimate:Animate(myFrame, "fadeIn", {
+---     duration = 0.5,
+---     onFinished = function(frame) print("done!") end,
+--- })
+--- ```
+---@param frame Frame The frame to animate (must have one anchor point)
+---@param name string Registered animation name
+---@param opts AnimateOpts? Animation options (duration, distance, onFinished)
+---@return boolean success Always returns true on success; errors on invalid input
 function lib:Animate(frame, name, opts)
     opts = opts or {}
 
@@ -405,6 +543,11 @@ function lib:Animate(frame, name, opts)
     return true
 end
 
+--- Stops the animation on a frame and restores it to its pre-animation state.
+--- Restores the original anchor position, scale, and alpha captured at animation start.
+--- Does nothing if the frame is not currently animating.
+--- The `onFinished` callback is NOT fired when an animation is stopped.
+---@param frame Frame The frame to stop animating
 function lib:Stop(frame)
     local state = lib.activeAnimations[frame]
     if not state then return end
@@ -423,6 +566,13 @@ function lib:Stop(frame)
     end
 end
 
+--- Updates the base anchor offsets of an in-progress animation.
+--- Use this when the frame's logical position changes during animation
+--- (e.g. repositioning a notification while it slides in).
+--- Does nothing if the frame is not currently animating.
+---@param frame Frame The animated frame
+---@param x number New base anchor X offset
+---@param y number New base anchor Y offset
 function lib:UpdateAnchor(frame, x, y)
     local state = lib.activeAnimations[frame]
     if state then
@@ -431,14 +581,22 @@ function lib:UpdateAnchor(frame, x, y)
     end
 end
 
+--- Returns whether a frame currently has an active animation.
+---@param frame Frame The frame to check
+---@return boolean isAnimating True if the frame is currently animating
 function lib:IsAnimating(frame)
     return lib.activeAnimations[frame] ~= nil
 end
 
+--- Returns the definition table for a registered animation.
+---@param name string The animation name
+---@return AnimationDefinition? definition The animation definition, or nil if not registered
 function lib:GetAnimationInfo(name)
     return lib.animations[name]
 end
 
+--- Returns a sorted list of all registered animation names.
+---@return string[] names Alphabetically sorted animation names
 function lib:GetAnimationNames()
     local names = {}
     for animName in pairs(lib.animations) do
@@ -448,6 +606,8 @@ function lib:GetAnimationNames()
     return names
 end
 
+--- Returns a sorted list of all registered entrance animation names.
+---@return string[] names Alphabetically sorted entrance animation names
 function lib:GetEntranceAnimations()
     local names = {}
     for animName, def in pairs(lib.animations) do
@@ -459,6 +619,8 @@ function lib:GetEntranceAnimations()
     return names
 end
 
+--- Returns a sorted list of all registered exit animation names.
+---@return string[] names Alphabetically sorted exit animation names
 function lib:GetExitAnimations()
     local names = {}
     for animName, def in pairs(lib.animations) do
@@ -470,6 +632,31 @@ function lib:GetExitAnimations()
     return names
 end
 
+--- Registers a custom animation definition.
+---
+--- Keyframe requirements:
+--- - At least 2 keyframes
+--- - Sorted ascending by `progress`
+--- - First keyframe must have `progress = 0.0`
+--- - Last keyframe must have `progress = 1.0`
+---
+--- Easing on a keyframe applies to the segment STARTING at that keyframe
+--- (i.e., the transition from `kf[i]` to `kf[i+1]` uses `kf[i].easing`).
+---
+--- Usage:
+--- ```lua
+--- LibAnimate:RegisterAnimation("customSlide", {
+---     type = "entrance",
+---     defaultDuration = 0.4,
+---     defaultDistance = 200,
+---     keyframes = {
+---         { progress = 0.0, translateX = -1.0, alpha = 0 },
+---         { progress = 1.0, translateX = 0, alpha = 1.0 },
+---     },
+--- })
+--- ```
+---@param name string Unique animation name
+---@param definition AnimationDefinition Animation definition table
 function lib:RegisterAnimation(name, definition)
     if type(name) ~= "string" then
         error("LibAnimate: Animation name must be a string", 2)
