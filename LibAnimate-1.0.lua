@@ -6,7 +6,7 @@
 -- Supported versions: Retail, TBC Anniversary, MoP Classic
 -------------------------------------------------------------------------------
 
-local MAJOR, MINOR = "LibAnimate-1.0", 1
+local MAJOR, MINOR = "LibAnimate-1.0", 2
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -165,9 +165,8 @@ lib.CubicBezier = CubicBezier
 -- ApplyEasing Helper
 -------------------------------------------------------------------------------
 
--- NOTE: For cubic-bezier table params, we create a new function each call.
--- This could be optimized by caching per unique param set, but is acceptable
--- for V1 since animations are short-lived.
+-- NOTE: This function is kept as a utility for future API use.
+-- The hot-path (OnUpdate) uses pre-resolved easing functions instead.
 local function ApplyEasing(easing, t)
     if type(easing) == "string" then
         local fn = lib.easings[easing]
@@ -180,6 +179,8 @@ local function ApplyEasing(easing, t)
     return t
 end
 
+lib.ApplyEasing = ApplyEasing
+
 -------------------------------------------------------------------------------
 -- Keyframe Interpolation
 -------------------------------------------------------------------------------
@@ -190,27 +191,28 @@ local PROPERTY_DEFAULTS = {
     scale = 1.0,
     alpha = 1.0,
 }
-local PROPERTY_NAMES = { "translateX", "translateY", "scale", "alpha" }
 
 local function FindKeyframes(keyframes, progress)
     local kf1 = keyframes[1]
     local kf2 = keyframes[#keyframes]
+    local kf1Index = 1
 
     for i = 1, #keyframes - 1 do
-        if progress >= keyframes[i].time and progress <= keyframes[i + 1].time then
+        if progress >= keyframes[i].progress and progress <= keyframes[i + 1].progress then
             kf1 = keyframes[i]
             kf2 = keyframes[i + 1]
+            kf1Index = i
             break
         end
     end
 
-    local segmentLength = kf2.time - kf1.time
+    local segmentLength = kf2.progress - kf1.progress
     local segmentProgress = 0
     if segmentLength > 0 then
-        segmentProgress = (progress - kf1.time) / segmentLength
+        segmentProgress = (progress - kf1.progress) / segmentLength
     end
 
-    return kf1, kf2, segmentProgress
+    return kf1, kf2, segmentProgress, kf1Index
 end
 
 local function GetProperty(kf, name)
@@ -224,31 +226,24 @@ local function Lerp(a, b, t)
     return a + (b - a) * t
 end
 
-local function InterpolateProperties(kf1, kf2, t)
-    local result = {}
-    for _, name in ipairs(PROPERTY_NAMES) do
-        local v1 = GetProperty(kf1, name)
-        local v2 = GetProperty(kf2, name)
-        result[name] = Lerp(v1, v2, t)
-    end
-    return result
-end
-
 -------------------------------------------------------------------------------
 -- ApplyToFrame
 -------------------------------------------------------------------------------
 
-local function ApplyToFrame(frame, state, props)
+local function ApplyToFrame(frame, state, tx, ty, sc, al)
     local distance = state.distance
 
-    local tx = props.translateX * distance
-    local ty = props.translateY * distance
+    local offsetX = tx * distance
+    local offsetY = ty * distance
 
     frame:ClearAllPoints()
     frame:SetPoint(state.anchorPoint, state.anchorRelativeTo, state.anchorRelativePoint,
-        state.anchorX + tx, state.anchorY + ty)
-    frame:SetScale(props.scale)
-    frame:SetAlpha(props.alpha)
+        state.anchorX + offsetX, state.anchorY + offsetY)
+
+    -- Clamp scale to minimum to prevent SetScale(0) errors (P4)
+    if sc < 0.001 then sc = 0.001 end
+    frame:SetScale(sc)
+    frame:SetAlpha(al)
 end
 
 -------------------------------------------------------------------------------
@@ -263,18 +258,22 @@ driverFrame:SetScript("OnUpdate", function()
         local rawProgress = math_min((now - state.startTime) / state.duration, 1.0)
 
         -- Find bracketing keyframes
-        local kf1, kf2, segmentProgress = FindKeyframes(state.keyframes, rawProgress)
+        local kf1, kf2, segmentProgress, kf1Index = FindKeyframes(state.keyframes, rawProgress)
 
-        -- Apply per-segment easing
-        if kf1.easing then
-            segmentProgress = ApplyEasing(kf1.easing, segmentProgress)
+        -- Apply per-segment easing (pre-resolved at animation start)
+        if state.resolvedEasings[kf1Index] then
+            segmentProgress = state.resolvedEasings[kf1Index](segmentProgress)
         end
 
-        -- Interpolate properties
-        local props = InterpolateProperties(kf1, kf2, segmentProgress)
+        -- Interpolate properties (unrolled for performance)
+        local easedT = segmentProgress
+        local tx = Lerp(GetProperty(kf1, "translateX"), GetProperty(kf2, "translateX"), easedT)
+        local ty = Lerp(GetProperty(kf1, "translateY"), GetProperty(kf2, "translateY"), easedT)
+        local sc = Lerp(GetProperty(kf1, "scale"), GetProperty(kf2, "scale"), easedT)
+        local al = Lerp(GetProperty(kf1, "alpha"), GetProperty(kf2, "alpha"), easedT)
 
         -- Apply to frame
-        ApplyToFrame(frame, state, props)
+        ApplyToFrame(frame, state, tx, ty, sc, al)
 
         -- Check completion
         if rawProgress >= 1.0 then
@@ -285,24 +284,33 @@ driverFrame:SetScript("OnUpdate", function()
 
     -- Process completions
     if toRemove then
+        -- First pass: clean up state and snap to final values
+        local callbacks = nil
         for _, frame in ipairs(toRemove) do
             local state = lib.activeAnimations[frame]
             if state then
                 local onFinished = state.onFinished
+                if onFinished then
+                    if not callbacks then callbacks = {} end
+                    callbacks[#callbacks + 1] = { fn = onFinished, frame = frame }
+                end
 
                 -- Snap to final state
                 local lastKf = state.keyframes[#state.keyframes]
-                local finalProps = {}
-                for _, name in ipairs(PROPERTY_NAMES) do
-                    finalProps[name] = GetProperty(lastKf, name)
-                end
-                ApplyToFrame(frame, state, finalProps)
+                local ftx = GetProperty(lastKf, "translateX")
+                local fty = GetProperty(lastKf, "translateY")
+                local fsc = GetProperty(lastKf, "scale")
+                local fal = GetProperty(lastKf, "alpha")
+                ApplyToFrame(frame, state, ftx, fty, fsc, fal)
 
                 lib.activeAnimations[frame] = nil
+            end
+        end
 
-                if onFinished then
-                    onFinished(frame)
-                end
+        -- Second pass: fire callbacks (after all state is clean)
+        if callbacks then
+            for _, cb in ipairs(callbacks) do
+                cb.fn(cb.frame)
             end
         end
     end
@@ -317,6 +325,13 @@ end)
 -- Public API
 -------------------------------------------------------------------------------
 
+--- Plays a named animation on a frame.
+-- The frame must have exactly one anchor point set via SetPoint().
+-- Frames with multiple anchor points (two-point sizing) are not supported
+-- and will lose their secondary anchors during animation.
+-- For exit animations, the frame is left at its final keyframe state when
+-- the animation completes. The consumer must handle cleanup (e.g., frame:Hide())
+-- in the onFinished callback.
 function lib:Animate(frame, name, opts)
     opts = opts or {}
 
@@ -330,17 +345,37 @@ function lib:Animate(frame, name, opts)
         error("LibAnimate-1.0: Unknown animation '" .. tostring(name) .. "'", 2)
     end
 
+    local duration = opts.duration or def.defaultDuration
+    if not duration or duration <= 0 then
+        error("LibAnimate-1.0: Animation duration must be greater than 0", 2)
+    end
+
     -- Capture current anchor
     local pt, rel, relPt, x, y = frame:GetPoint()
     if not pt then
         error("LibAnimate-1.0: Frame has no anchor point set", 2)
     end
 
+    local originalScale = frame:GetScale()
+    local originalAlpha = frame:GetAlpha()
+
+    -- Pre-resolve easing functions to avoid per-tick allocation
+    local resolvedEasings = {}
+    for i, kf in ipairs(def.keyframes) do
+        if kf.easing then
+            if type(kf.easing) == "string" then
+                resolvedEasings[i] = lib.easings[kf.easing] or lib.easings.linear
+            elseif type(kf.easing) == "table" then
+                resolvedEasings[i] = CubicBezier(kf.easing[1], kf.easing[2], kf.easing[3], kf.easing[4])
+            end
+        end
+    end
+
     local state = {
         definition = def,
         keyframes = def.keyframes,
         startTime = GetTime(),
-        duration = opts.duration or def.defaultDuration,
+        duration = duration,
         distance = opts.distance or def.defaultDistance,
         onFinished = opts.onFinished,
         anchorPoint = pt,
@@ -348,6 +383,9 @@ function lib:Animate(frame, name, opts)
         anchorRelativePoint = relPt,
         anchorX = x or 0,
         anchorY = y or 0,
+        originalScale = originalScale,
+        originalAlpha = originalAlpha,
+        resolvedEasings = resolvedEasings,
     }
 
     lib.activeAnimations[frame] = state
@@ -364,8 +402,8 @@ function lib:Stop(frame)
     frame:ClearAllPoints()
     frame:SetPoint(state.anchorPoint, state.anchorRelativeTo, state.anchorRelativePoint,
         state.anchorX, state.anchorY)
-    frame:SetScale(1)
-    frame:SetAlpha(1)
+    frame:SetScale(state.originalScale)
+    frame:SetAlpha(state.originalAlpha)
 
     lib.activeAnimations[frame] = nil
 
@@ -392,8 +430,8 @@ end
 
 function lib:GetAnimationNames()
     local names = {}
-    for name in pairs(lib.animations) do
-        names[#names + 1] = name
+    for animName in pairs(lib.animations) do
+        names[#names + 1] = animName
     end
     table_sort(names)
     return names
@@ -401,9 +439,9 @@ end
 
 function lib:GetEntranceAnimations()
     local names = {}
-    for name, def in pairs(lib.animations) do
+    for animName, def in pairs(lib.animations) do
         if def.type == "entrance" then
-            names[#names + 1] = name
+            names[#names + 1] = animName
         end
     end
     table_sort(names)
@@ -412,9 +450,9 @@ end
 
 function lib:GetExitAnimations()
     local names = {}
-    for name, def in pairs(lib.animations) do
+    for animName, def in pairs(lib.animations) do
         if def.type == "exit" then
-            names[#names + 1] = name
+            names[#names + 1] = animName
         end
     end
     table_sort(names)
@@ -433,6 +471,27 @@ function lib:RegisterAnimation(name, definition)
     end
     if not definition.keyframes or #definition.keyframes < 2 then
         error("LibAnimate-1.0: Animation must have at least 2 keyframes", 2)
+    end
+
+    -- Validate keyframe ordering
+    local keyframes = definition.keyframes
+    for i = 2, #keyframes do
+        if keyframes[i].progress < keyframes[i - 1].progress then
+            error("LibAnimate-1.0: Keyframes must be sorted by progress (ascending)", 2)
+        end
+    end
+
+    -- Validate boundaries
+    if keyframes[1].progress ~= 0.0 then
+        error("LibAnimate-1.0: First keyframe must have progress = 0.0", 2)
+    end
+    if keyframes[#keyframes].progress ~= 1.0 then
+        error("LibAnimate-1.0: Last keyframe must have progress = 1.0", 2)
+    end
+
+    -- Validate defaultDuration if provided
+    if definition.defaultDuration and definition.defaultDuration <= 0 then
+        error("LibAnimate-1.0: defaultDuration must be greater than 0", 2)
     end
 
     lib.animations[name] = definition

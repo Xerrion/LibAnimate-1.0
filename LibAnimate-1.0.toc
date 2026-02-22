@@ -1,8 +1,8 @@
-## Interface: 110207
+## Interface: 110207, 120001, 120000
+## Interface-Mists: 50502, 50503
 ## Interface-BCC: 20505
-## Interface-Mists: 50503
 ## Title: Lib: Animate-1.0
-## Notes: Keyframe-driven animation library for WoW frames, inspired by animate.css
+## Notes: Keyframe-driven animation library for WoW frames
 ## Author: Xerrion
 ## Version: @project-version@
 ## X-Category: Library

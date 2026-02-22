@@ -17,9 +17,9 @@ lib:RegisterAnimation("backInDown", {
     defaultDuration = 0.6,
     defaultDistance = 300,
     keyframes = {
-        { time = 0.0, translateY = 1.0, scale = 0.7, alpha = 0.7 },
-        { time = 0.8, translateY = 0, scale = 0.7, alpha = 0.7 },
-        { time = 1.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.0, translateY = 1.0, scale = 0.7, alpha = 0.7 },
+        { progress = 0.8, translateY = 0, scale = 0.7, alpha = 0.7 },
+        { progress = 1.0, scale = 1.0, alpha = 1.0 },
     },
 })
 
@@ -28,9 +28,9 @@ lib:RegisterAnimation("backInUp", {
     defaultDuration = 0.6,
     defaultDistance = 300,
     keyframes = {
-        { time = 0.0, translateY = -1.0, scale = 0.7, alpha = 0.7 },
-        { time = 0.8, translateY = 0, scale = 0.7, alpha = 0.7 },
-        { time = 1.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.0, translateY = -1.0, scale = 0.7, alpha = 0.7 },
+        { progress = 0.8, translateY = 0, scale = 0.7, alpha = 0.7 },
+        { progress = 1.0, scale = 1.0, alpha = 1.0 },
     },
 })
 
@@ -39,9 +39,9 @@ lib:RegisterAnimation("backInLeft", {
     defaultDuration = 0.6,
     defaultDistance = 300,
     keyframes = {
-        { time = 0.0, translateX = -1.0, scale = 0.7, alpha = 0.7 },
-        { time = 0.8, translateX = 0, scale = 0.7, alpha = 0.7 },
-        { time = 1.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.0, translateX = -1.0, scale = 0.7, alpha = 0.7 },
+        { progress = 0.8, translateX = 0, scale = 0.7, alpha = 0.7 },
+        { progress = 1.0, scale = 1.0, alpha = 1.0 },
     },
 })
 
@@ -50,9 +50,9 @@ lib:RegisterAnimation("backInRight", {
     defaultDuration = 0.6,
     defaultDistance = 300,
     keyframes = {
-        { time = 0.0, translateX = 1.0, scale = 0.7, alpha = 0.7 },
-        { time = 0.8, translateX = 0, scale = 0.7, alpha = 0.7 },
-        { time = 1.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.0, translateX = 1.0, scale = 0.7, alpha = 0.7 },
+        { progress = 0.8, translateX = 0, scale = 0.7, alpha = 0.7 },
+        { progress = 1.0, scale = 1.0, alpha = 1.0 },
     },
 })
 
@@ -65,9 +65,9 @@ lib:RegisterAnimation("backOutDown", {
     defaultDuration = 0.6,
     defaultDistance = 300,
     keyframes = {
-        { time = 0.0, scale = 1.0, alpha = 1.0 },
-        { time = 0.2, translateY = 0, scale = 0.7, alpha = 0.7 },
-        { time = 1.0, translateY = -1.0, scale = 0.7, alpha = 0.7 },
+        { progress = 0.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.2, translateY = 0, scale = 0.7, alpha = 0.7 },
+        { progress = 1.0, translateY = -1.0, scale = 0.7, alpha = 0.7 },
     },
 })
 
@@ -76,9 +76,9 @@ lib:RegisterAnimation("backOutUp", {
     defaultDuration = 0.6,
     defaultDistance = 300,
     keyframes = {
-        { time = 0.0, scale = 1.0, alpha = 1.0 },
-        { time = 0.2, translateY = 0, scale = 0.7, alpha = 0.7 },
-        { time = 1.0, translateY = 1.0, scale = 0.7, alpha = 0.7 },
+        { progress = 0.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.2, translateY = 0, scale = 0.7, alpha = 0.7 },
+        { progress = 1.0, translateY = 1.0, scale = 0.7, alpha = 0.7 },
     },
 })
 
@@ -87,9 +87,9 @@ lib:RegisterAnimation("backOutLeft", {
     defaultDuration = 0.6,
     defaultDistance = 300,
     keyframes = {
-        { time = 0.0, scale = 1.0, alpha = 1.0 },
-        { time = 0.2, translateX = 0, scale = 0.7, alpha = 0.7 },
-        { time = 1.0, translateX = -1.0, scale = 0.7, alpha = 0.7 },
+        { progress = 0.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.2, translateX = 0, scale = 0.7, alpha = 0.7 },
+        { progress = 1.0, translateX = -1.0, scale = 0.7, alpha = 0.7 },
     },
 })
 
@@ -98,9 +98,9 @@ lib:RegisterAnimation("backOutRight", {
     defaultDuration = 0.6,
     defaultDistance = 300,
     keyframes = {
-        { time = 0.0, scale = 1.0, alpha = 1.0 },
-        { time = 0.2, translateX = 0, scale = 0.7, alpha = 0.7 },
-        { time = 1.0, translateX = 1.0, scale = 0.7, alpha = 0.7 },
+        { progress = 0.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.2, translateX = 0, scale = 0.7, alpha = 0.7 },
+        { progress = 1.0, translateX = 1.0, scale = 0.7, alpha = 0.7 },
     },
 })
 
@@ -113,8 +113,8 @@ lib:RegisterAnimation("slideInDown", {
     defaultDuration = 0.4,
     defaultDistance = 200,
     keyframes = {
-        { time = 0.0, translateY = 1.0 },
-        { time = 1.0, translateY = 0 },
+        { progress = 0.0, translateY = 1.0 },
+        { progress = 1.0, translateY = 0 },
     },
 })
 
@@ -123,8 +123,8 @@ lib:RegisterAnimation("slideInUp", {
     defaultDuration = 0.4,
     defaultDistance = 200,
     keyframes = {
-        { time = 0.0, translateY = -1.0 },
-        { time = 1.0, translateY = 0 },
+        { progress = 0.0, translateY = -1.0 },
+        { progress = 1.0, translateY = 0 },
     },
 })
 
@@ -133,8 +133,8 @@ lib:RegisterAnimation("slideInLeft", {
     defaultDuration = 0.4,
     defaultDistance = 200,
     keyframes = {
-        { time = 0.0, translateX = -1.0 },
-        { time = 1.0, translateX = 0 },
+        { progress = 0.0, translateX = -1.0 },
+        { progress = 1.0, translateX = 0 },
     },
 })
 
@@ -143,8 +143,8 @@ lib:RegisterAnimation("slideInRight", {
     defaultDuration = 0.4,
     defaultDistance = 200,
     keyframes = {
-        { time = 0.0, translateX = 1.0 },
-        { time = 1.0, translateX = 0 },
+        { progress = 0.0, translateX = 1.0 },
+        { progress = 1.0, translateX = 0 },
     },
 })
 
@@ -157,8 +157,8 @@ lib:RegisterAnimation("slideOutDown", {
     defaultDuration = 0.4,
     defaultDistance = 200,
     keyframes = {
-        { time = 0.0, translateY = 0 },
-        { time = 1.0, translateY = -1.0 },
+        { progress = 0.0, translateY = 0 },
+        { progress = 1.0, translateY = -1.0 },
     },
 })
 
@@ -167,8 +167,8 @@ lib:RegisterAnimation("slideOutUp", {
     defaultDuration = 0.4,
     defaultDistance = 200,
     keyframes = {
-        { time = 0.0, translateY = 0 },
-        { time = 1.0, translateY = 1.0 },
+        { progress = 0.0, translateY = 0 },
+        { progress = 1.0, translateY = 1.0 },
     },
 })
 
@@ -177,8 +177,8 @@ lib:RegisterAnimation("slideOutLeft", {
     defaultDuration = 0.4,
     defaultDistance = 200,
     keyframes = {
-        { time = 0.0, translateX = 0 },
-        { time = 1.0, translateX = -1.0 },
+        { progress = 0.0, translateX = 0 },
+        { progress = 1.0, translateX = -1.0 },
     },
 })
 
@@ -187,8 +187,8 @@ lib:RegisterAnimation("slideOutRight", {
     defaultDuration = 0.4,
     defaultDistance = 200,
     keyframes = {
-        { time = 0.0, translateX = 0 },
-        { time = 1.0, translateX = 1.0 },
+        { progress = 0.0, translateX = 0 },
+        { progress = 1.0, translateX = 1.0 },
     },
 })
 
@@ -201,9 +201,9 @@ lib:RegisterAnimation("zoomIn", {
     defaultDuration = 0.5,
     defaultDistance = 0,
     keyframes = {
-        { time = 0.0, scale = 0.3, alpha = 0 },
-        { time = 0.5, alpha = 1.0 },
-        { time = 1.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.0, scale = 0.3, alpha = 0 },
+        { progress = 0.5, alpha = 1.0 },
+        { progress = 1.0, scale = 1.0, alpha = 1.0 },
     },
 })
 
@@ -212,9 +212,9 @@ lib:RegisterAnimation("zoomInDown", {
     defaultDuration = 0.5,
     defaultDistance = 400,
     keyframes = {
-        { time = 0.0, translateY = 1.0, scale = 0.1, alpha = 0, easing = { 0.55, 0.055, 0.675, 0.19 } },
-        { time = 0.6, translateY = -0.06, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
-        { time = 1.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.0, translateY = 1.0, scale = 0.1, alpha = 0, easing = { 0.55, 0.055, 0.675, 0.19 } },
+        { progress = 0.6, translateY = -0.06, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
+        { progress = 1.0, scale = 1.0, alpha = 1.0 },
     },
 })
 
@@ -223,9 +223,9 @@ lib:RegisterAnimation("zoomInUp", {
     defaultDuration = 0.5,
     defaultDistance = 400,
     keyframes = {
-        { time = 0.0, translateY = -1.0, scale = 0.1, alpha = 0, easing = { 0.55, 0.055, 0.675, 0.19 } },
-        { time = 0.6, translateY = 0.06, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
-        { time = 1.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.0, translateY = -1.0, scale = 0.1, alpha = 0, easing = { 0.55, 0.055, 0.675, 0.19 } },
+        { progress = 0.6, translateY = 0.06, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
+        { progress = 1.0, scale = 1.0, alpha = 1.0 },
     },
 })
 
@@ -234,9 +234,9 @@ lib:RegisterAnimation("zoomInLeft", {
     defaultDuration = 0.5,
     defaultDistance = 400,
     keyframes = {
-        { time = 0.0, translateX = -1.0, scale = 0.1, alpha = 0, easing = { 0.55, 0.055, 0.675, 0.19 } },
-        { time = 0.6, translateX = 0.01, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
-        { time = 1.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.0, translateX = -1.0, scale = 0.1, alpha = 0, easing = { 0.55, 0.055, 0.675, 0.19 } },
+        { progress = 0.6, translateX = 0.01, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
+        { progress = 1.0, scale = 1.0, alpha = 1.0 },
     },
 })
 
@@ -245,9 +245,9 @@ lib:RegisterAnimation("zoomInRight", {
     defaultDuration = 0.5,
     defaultDistance = 400,
     keyframes = {
-        { time = 0.0, translateX = 1.0, scale = 0.1, alpha = 0, easing = { 0.55, 0.055, 0.675, 0.19 } },
-        { time = 0.6, translateX = -0.01, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
-        { time = 1.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.0, translateX = 1.0, scale = 0.1, alpha = 0, easing = { 0.55, 0.055, 0.675, 0.19 } },
+        { progress = 0.6, translateX = -0.01, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
+        { progress = 1.0, scale = 1.0, alpha = 1.0 },
     },
 })
 
@@ -260,9 +260,9 @@ lib:RegisterAnimation("zoomOut", {
     defaultDuration = 0.5,
     defaultDistance = 0,
     keyframes = {
-        { time = 0.0, scale = 1.0, alpha = 1.0 },
-        { time = 0.5, scale = 0.3, alpha = 0 },
-        { time = 1.0, scale = 0.3, alpha = 0 },
+        { progress = 0.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.5, scale = 0.3, alpha = 0 },
+        { progress = 1.0, scale = 0.3, alpha = 0 },
     },
 })
 
@@ -271,9 +271,9 @@ lib:RegisterAnimation("zoomOutDown", {
     defaultDuration = 0.5,
     defaultDistance = 400,
     keyframes = {
-        { time = 0.0, scale = 1.0, alpha = 1.0, easing = { 0.55, 0.055, 0.675, 0.19 } },
-        { time = 0.4, translateY = 0.03, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
-        { time = 1.0, translateY = -1.0, scale = 0.1, alpha = 0 },
+        { progress = 0.0, scale = 1.0, alpha = 1.0, easing = { 0.55, 0.055, 0.675, 0.19 } },
+        { progress = 0.4, translateY = 0.03, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
+        { progress = 1.0, translateY = -1.0, scale = 0.1, alpha = 0 },
     },
 })
 
@@ -282,9 +282,9 @@ lib:RegisterAnimation("zoomOutUp", {
     defaultDuration = 0.5,
     defaultDistance = 400,
     keyframes = {
-        { time = 0.0, scale = 1.0, alpha = 1.0, easing = { 0.55, 0.055, 0.675, 0.19 } },
-        { time = 0.4, translateY = -0.03, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
-        { time = 1.0, translateY = 1.0, scale = 0.1, alpha = 0 },
+        { progress = 0.0, scale = 1.0, alpha = 1.0, easing = { 0.55, 0.055, 0.675, 0.19 } },
+        { progress = 0.4, translateY = -0.03, scale = 0.475, alpha = 1.0, easing = { 0.175, 0.885, 0.32, 1 } },
+        { progress = 1.0, translateY = 1.0, scale = 0.1, alpha = 0 },
     },
 })
 
@@ -293,9 +293,9 @@ lib:RegisterAnimation("zoomOutLeft", {
     defaultDuration = 0.5,
     defaultDistance = 400,
     keyframes = {
-        { time = 0.0, scale = 1.0, alpha = 1.0 },
-        { time = 0.4, translateX = 0.021, scale = 0.475, alpha = 1.0 },
-        { time = 1.0, translateX = -1.0, scale = 0.1, alpha = 0 },
+        { progress = 0.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.4, translateX = 0.021, scale = 0.475, alpha = 1.0 },
+        { progress = 1.0, translateX = -1.0, scale = 0.1, alpha = 0 },
     },
 })
 
@@ -304,8 +304,8 @@ lib:RegisterAnimation("zoomOutRight", {
     defaultDuration = 0.5,
     defaultDistance = 400,
     keyframes = {
-        { time = 0.0, scale = 1.0, alpha = 1.0 },
-        { time = 0.4, translateX = -0.021, scale = 0.475, alpha = 1.0 },
-        { time = 1.0, translateX = 1.0, scale = 0.1, alpha = 0 },
+        { progress = 0.0, scale = 1.0, alpha = 1.0 },
+        { progress = 0.4, translateX = -0.021, scale = 0.475, alpha = 1.0 },
+        { progress = 1.0, translateX = 1.0, scale = 0.1, alpha = 0 },
     },
 })
