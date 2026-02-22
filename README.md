@@ -1,4 +1,13 @@
+<p align="center">
+  <img src="icon.png" alt="LibAnimate" width="128" />
+</p>
+
 # LibAnimate
+
+[![GitHub release](https://img.shields.io/github/v/release/Xerrion/LibAnimate?style=flat-square)](https://github.com/Xerrion/LibAnimate/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Lint](https://img.shields.io/github/actions/workflow/status/Xerrion/LibAnimate/lint.yml?label=lint&style=flat-square)](https://github.com/Xerrion/LibAnimate/actions/workflows/lint.yml)
+[![Wiki](https://img.shields.io/badge/docs-Wiki-brightgreen?style=flat-square)](https://github.com/Xerrion/LibAnimate/wiki)
 
 A keyframe-driven animation library for World of Warcraft addons, inspired by [animate.css](https://animate.style/).
 
