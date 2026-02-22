@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.3...2.1.0) (2026-02-22)
+
+
+### Features
+
+* add fade and move animations ([#11](https://github.com/Xerrion/LibAnimate-1.0/issues/11)) ([99a0e33](https://github.com/Xerrion/LibAnimate-1.0/commit/99a0e33139d6f269c474c615e67dc0a1872cf734))
+
 ## [2.0.3](https://github.com/Xerrion/LibAnimate-1.0/compare/2.0.2...2.0.3) (2026-02-22)
 
 
