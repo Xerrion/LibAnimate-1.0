@@ -1,3 +1,25 @@
+## [3.3.0] - 2026-02-22
+
+### 🚀 Features
+
+- Add delay, repeatCount, and animation queue support
+- Add delay, repeatCount, and animation queue support (#27)
+- Add PauseQueue, ResumeQueue, IsPaused, SlideAnchor, SkipToEntry, RemoveQueueEntry
+## [3.2.0] - 2026-02-22
+
+### 🚀 Features
+
+- Add delay, repeatCount, and animation queue support (#27)
+
+### 📚 Documentation
+
+- Update README and API docs for 77 animations and attention type (#23)
+- Add shields.io badges to README (#25)
+- Streamline README, defer detailed docs to wiki (#26)
+
+### ⚙️ Miscellaneous Tasks
+
+- Release 3.2.0 (#24)
 ## [3.1.0] - 2026-02-22
 
 ### 🚀 Features
@@ -11,6 +33,10 @@
 ### 📚 Documentation
 
 - Document the lib api (#21)
+
+### ⚙️ Miscellaneous Tasks
+
+- Release 3.1.0 (#19)
 ## [3.0.1] - 2026-02-22
 
 ### ⚙️ Miscellaneous Tasks
