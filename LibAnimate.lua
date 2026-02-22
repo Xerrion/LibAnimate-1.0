@@ -95,7 +95,7 @@ lib.easings = {
         local c1 = 1.70158
         local c2 = c1 * 1.525
         if t < 0.5 then
-            return (2 * t * 2 * t * ((c2 + 1) * 2 * t - c2)) / 2
+            return ((2 * t) * (2 * t) * ((c2 + 1) * (2 * t) - c2)) / 2
         end
         local inv = 2 * t - 2
         return (inv * inv * ((c2 + 1) * inv + c2) + 2) / 2
@@ -193,26 +193,35 @@ local PROPERTY_DEFAULTS = {
 }
 
 local function FindKeyframes(keyframes, progress)
-    local kf1 = keyframes[1]
-    local kf2 = keyframes[#keyframes]
-    local kf1Index = 1
+    -- Handle boundary cases explicitly
+    if progress <= 0 then
+        local segmentLength = keyframes[2].progress - keyframes[1].progress
+        local segmentProgress = 0
+        if segmentLength > 0 then
+            segmentProgress = (progress - keyframes[1].progress) / segmentLength
+        end
+        return keyframes[1], keyframes[2], segmentProgress, 1
+    end
 
-    for i = 1, #keyframes - 1 do
+    local n = #keyframes
+    if progress >= 1.0 then
+        return keyframes[n - 1], keyframes[n], 1, n - 1
+    end
+
+    -- Search for bracketing keyframes
+    for i = 1, n - 1 do
         if progress >= keyframes[i].progress and progress <= keyframes[i + 1].progress then
-            kf1 = keyframes[i]
-            kf2 = keyframes[i + 1]
-            kf1Index = i
-            break
+            local segmentLength = keyframes[i + 1].progress - keyframes[i].progress
+            local segmentProgress = 0
+            if segmentLength > 0 then
+                segmentProgress = (progress - keyframes[i].progress) / segmentLength
+            end
+            return keyframes[i], keyframes[i + 1], segmentProgress, i
         end
     end
 
-    local segmentLength = kf2.progress - kf1.progress
-    local segmentProgress = 0
-    if segmentLength > 0 then
-        segmentProgress = (progress - kf1.progress) / segmentLength
-    end
-
-    return kf1, kf2, segmentProgress, kf1Index
+    -- Fallback: should never reach here with valid keyframes (0.0 to 1.0 boundary)
+    return keyframes[n - 1], keyframes[n], 1, n - 1
 end
 
 local function GetProperty(kf, name)
@@ -359,7 +368,9 @@ function lib:Animate(frame, name, opts)
     local originalScale = frame:GetScale()
     local originalAlpha = frame:GetAlpha()
 
-    -- Pre-resolve easing functions to avoid per-tick allocation
+    -- Pre-resolve easing functions to avoid per-tick allocation.
+    -- Convention: kf.easing applies to the segment STARTING at that keyframe
+    -- (i.e., the easing from kf[i] to kf[i+1] is defined on kf[i]).
     local resolvedEasings = {}
     for i, kf in ipairs(def.keyframes) do
         if kf.easing then
@@ -376,7 +387,7 @@ function lib:Animate(frame, name, opts)
         keyframes = def.keyframes,
         startTime = GetTime(),
         duration = duration,
-        distance = opts.distance or def.defaultDistance,
+        distance = opts.distance or def.defaultDistance or 0,
         onFinished = opts.onFinished,
         anchorPoint = pt,
         anchorRelativeTo = rel,
