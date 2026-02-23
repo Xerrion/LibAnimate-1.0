@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" alt="LibAnimate" width="128" />
+  <img src="https://github.com/Xerrion/LibAnimate/blob/master/icon.png" alt="LibAnimate" width="128" />
 </p>
 
 # LibAnimate
