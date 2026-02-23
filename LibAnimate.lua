@@ -543,80 +543,6 @@ end)
 -- Public API
 -------------------------------------------------------------------------------
 
---- Builds an animation state table from a frame, animation name, and options.
---- This is the pure state-building logic extracted from Animate() -- it captures
---- the frame's current anchor, scale, alpha, resolves easings, and returns the
---- state table. It has NO side effects: does not call Stop(), does not clear
---- queues, does not set lib.activeAnimations, does not show driverFrame.
----@param frame Frame The frame to animate (must have one anchor point)
----@param name string Registered animation name
----@param opts AnimateOpts Options table (duration, distance, delay, repeatCount, onFinished)
----@return AnimationState state The constructed animation state
-local function CreateAnimationState(frame, name, opts)
-    local def = lib.animations[name]
-    if not def then
-        error("LibAnimate: Unknown animation '" .. tostring(name) .. "'", 2)
-    end
-
-    local duration = opts.duration or def.defaultDuration
-    if not duration or duration <= 0 then
-        error("LibAnimate: Animation duration must be greater than 0", 2)
-    end
-
-    -- Capture current anchor
-    local pt, rel, relPt, x, y = frame:GetPoint(1)
-    if not pt then
-        error("LibAnimate: Frame has no anchor point set", 2)
-    end
-
-    local originalScale = frame:GetScale()
-    local originalAlpha = frame:GetAlpha()
-
-    -- Pre-resolve easing functions to avoid per-tick allocation.
-    -- Convention: kf.easing applies to the segment STARTING at that keyframe
-    -- (i.e., the easing from kf[i] to kf[i+1] is defined on kf[i]).
-    local resolvedEasings = {}
-    for i, kf in ipairs(def.keyframes) do
-        if kf.easing then
-            if type(kf.easing) == "string" then
-                resolvedEasings[i] = lib.easings[kf.easing] or lib.easings.linear
-            elseif type(kf.easing) == "table" then
-                resolvedEasings[i] = CubicBezier(kf.easing[1], kf.easing[2], kf.easing[3], kf.easing[4])
-            end
-        end
-    end
-
-    local delay = opts.delay or 0
-    if type(delay) ~= "number" or delay < 0 then
-        error("LibAnimate: delay must be a non-negative number", 2)
-    end
-
-    local repeatCount = opts.repeatCount or 1
-    if type(repeatCount) ~= "number" or repeatCount < 0 or repeatCount ~= math_floor(repeatCount) then
-        error("LibAnimate: repeatCount must be 0 (infinite) or a positive integer", 2)
-    end
-
-    return {
-        definition = def,
-        keyframes = def.keyframes,
-        startTime = GetTime(),
-        duration = duration,
-        distance = opts.distance or def.defaultDistance or 0,
-        delay = delay,
-        repeatCount = repeatCount,
-        currentRepeat = 1,
-        onFinished = opts.onFinished,
-        anchorPoint = pt,
-        anchorRelativeTo = rel,
-        anchorRelativePoint = relPt,
-        anchorX = x or 0,
-        anchorY = y or 0,
-        originalScale = originalScale,
-        originalAlpha = originalAlpha,
-        resolvedEasings = resolvedEasings,
-    }
-end
-
 --- Plays a registered animation on a frame.
 ---
 --- The frame must have exactly one anchor point set via `SetPoint()`.
@@ -664,7 +590,68 @@ function lib:Animate(frame, name, opts)
     -- Clear any active queue on this frame
     lib.animationQueues[frame] = nil
 
-    local state = CreateAnimationState(frame, name, opts)
+    local def = lib.animations[name]
+    if not def then
+        error("LibAnimate: Unknown animation '" .. tostring(name) .. "'", 2)
+    end
+
+    local duration = opts.duration or def.defaultDuration
+    if not duration or duration <= 0 then
+        error("LibAnimate: Animation duration must be greater than 0", 2)
+    end
+
+    -- Capture current anchor
+    local pt, rel, relPt, x, y = frame:GetPoint()
+    if not pt then
+        error("LibAnimate: Frame has no anchor point set", 2)
+    end
+
+    local originalScale = frame:GetScale()
+    local originalAlpha = frame:GetAlpha()
+
+    -- Pre-resolve easing functions to avoid per-tick allocation.
+    -- Convention: kf.easing applies to the segment STARTING at that keyframe
+    -- (i.e., the easing from kf[i] to kf[i+1] is defined on kf[i]).
+    local resolvedEasings = {}
+    for i, kf in ipairs(def.keyframes) do
+        if kf.easing then
+            if type(kf.easing) == "string" then
+                resolvedEasings[i] = lib.easings[kf.easing] or lib.easings.linear
+            elseif type(kf.easing) == "table" then
+                resolvedEasings[i] = CubicBezier(kf.easing[1], kf.easing[2], kf.easing[3], kf.easing[4])
+            end
+        end
+    end
+
+    local delay = opts.delay or 0
+    if type(delay) ~= "number" or delay < 0 then
+        error("LibAnimate: delay must be a non-negative number", 2)
+    end
+
+    local repeatCount = opts.repeatCount or 1
+    if type(repeatCount) ~= "number" or repeatCount < 0 or repeatCount ~= math_floor(repeatCount) then
+        error("LibAnimate: repeatCount must be 0 (infinite) or a positive integer", 2)
+    end
+
+    local state = {
+        definition = def,
+        keyframes = def.keyframes,
+        startTime = GetTime(),
+        duration = duration,
+        distance = opts.distance or def.defaultDistance or 0,
+        delay = delay,
+        repeatCount = repeatCount,
+        currentRepeat = 1,
+        onFinished = opts.onFinished,
+        anchorPoint = pt,
+        anchorRelativeTo = rel,
+        anchorRelativePoint = relPt,
+        anchorX = x or 0,
+        anchorY = y or 0,
+        originalScale = originalScale,
+        originalAlpha = originalAlpha,
+        resolvedEasings = resolvedEasings,
+    }
 
     lib.activeAnimations[frame] = state
     driverFrame:Show()
@@ -726,82 +713,62 @@ end
 -------------------------------------------------------------------------------
 
 --- Internal helper to start the next entry in an animation queue.
---- Builds a fresh animation state via CreateAnimationState (bypassing Stop()
---- and queue clearing), then inherits anchor, slide, pause, and original
---- frame properties from the previous entry's state so mid-slide positions
---- and pause state carry seamlessly across queue transitions.
+--- Retrieves the current queue entry, builds options, and calls Animate
+--- with an internal onFinished that advances the queue.
 --- Exposed as lib._startQueueEntry for internal use by SkipToEntry/RemoveQueueEntry.
 ---@param self LibAnimate
 ---@param frame Frame The frame being animated
----@param inheritState AnimationState? Previous entry's state to inherit from
-local function StartQueueEntry(self, frame, inheritState)
-    local queue = lib.animationQueues[frame]
+local function StartQueueEntry(self, frame)
+    local queue = self.animationQueues[frame]
     if not queue then return end
 
     local entry = queue.entries[queue.index]
     if not entry then
         if queue.loop then
+            if #queue.entries == 0 then
+                self.animationQueues[frame] = nil
+                if queue.onFinished then queue.onFinished(frame) end
+                return
+            end
             queue.index = 1
-            StartQueueEntry(self, frame, inheritState)
+            StartQueueEntry(self, frame)
             return
         end
         -- Queue exhausted
-        lib.animationQueues[frame] = nil
-        if queue.onFinished then
-            local ok, err = pcall(queue.onFinished, frame)
-            if not ok then geterrorhandler()(err) end
-        end
+        local onFinished = queue.onFinished
+        self.animationQueues[frame] = nil
+        if onFinished then onFinished(frame) end
         return
     end
 
-    -- Resolve previous state for inheritance
-    local prevState = inheritState or lib.activeAnimations[frame]
-
-    -- Build fresh animation state (no Stop, no queue clear)
-    local newState = CreateAnimationState(frame, entry.name, {
+    local opts = {
         duration = entry.duration,
         distance = entry.distance,
         delay = entry.delay,
         repeatCount = entry.repeatCount,
-    })
-
-    -- Inherit from previous entry's state
-    if prevState then
-        -- Anchor position (critical: may be mid-slide)
-        newState.anchorPoint = prevState.anchorPoint
-        newState.anchorRelativeTo = prevState.anchorRelativeTo
-        newState.anchorRelativePoint = prevState.anchorRelativePoint
-        newState.anchorX = prevState.anchorX
-        newState.anchorY = prevState.anchorY
-
-        -- Original frame properties (restore target stays consistent across queue)
-        newState.originalScale = prevState.originalScale
-        newState.originalAlpha = prevState.originalAlpha
-
-        -- Slide fields (mid-slide continues seamlessly into next entry)
-        if prevState.slideStartTime then
-            newState.slideFromX = prevState.slideFromX
-            newState.slideFromY = prevState.slideFromY
-            newState.slideToX = prevState.slideToX
-            newState.slideToY = prevState.slideToY
-            newState.slideDuration = prevState.slideDuration
-            newState.slideStartTime = prevState.slideStartTime
-            newState.slideElapsedAtPause = prevState.slideElapsedAtPause
-        end
-
-        -- Pause state (if paused, new entry starts paused too)
-        if prevState.isPaused then
-            newState.isPaused = true
-            newState.elapsedAtPause = newState.delay
-        end
-    end
+        onFinished = function(f)
+            -- Fire per-step callback (pcall so queue always advances)
+            if entry.onFinished then
+                local ok, err = pcall(entry.onFinished, f)
+                if not ok then
+                    geterrorhandler()(err)
+                end
+            end
+            -- Advance queue
+            if self.animationQueues[f] then
+                self.animationQueues[f].index =
+                    self.animationQueues[f].index + 1
+                StartQueueEntry(self, f)
+            end
+        end,
+    }
 
     -- Preserve slide state from current animation before Animate() destroys it.
     -- When a queue transitions between entries, Animate() calls Stop() which
     -- restores the frame to its pre-animation anchor and wipes all state.
     -- Without this, a SlideAnchor call that started during a previous entry
     -- would be lost, snapping the frame to a stale position.
-    prevState = lib.activeAnimations[frame]
+    local prevState = lib.activeAnimations[frame]
     local savedSlide
     if prevState and prevState.slideStartTime then
         savedSlide = {
@@ -819,12 +786,7 @@ local function StartQueueEntry(self, frame, inheritState)
 
     -- Save/restore queue around Animate() since it clears queues
     local savedQueue = self.animationQueues[frame]
-    self:Animate(frame, entry.name, {
-        duration = entry.duration,
-        distance = entry.distance,
-        delay = entry.delay,
-        repeatCount = entry.repeatCount,
-    })
+    self:Animate(frame, entry.name, opts)
     self.animationQueues[frame] = savedQueue
 
     -- Restore in-progress slide state onto the new animation state.
@@ -832,7 +794,7 @@ local function StartQueueEntry(self, frame, inheritState)
     -- mid-slide position rather than snapping to the anchor that
     -- Stop() restored during the Animate() call.
     if savedSlide then
-        newState = lib.activeAnimations[frame]
+        local newState = lib.activeAnimations[frame]
         if newState then
             newState.anchorX = savedSlide.anchorX
             newState.anchorY = savedSlide.anchorY
@@ -1052,13 +1014,12 @@ function lib:SkipToEntry(frame, index)
         return
     end
 
-    -- Capture current state for inheritance before clearing
-    local prevState = lib.activeAnimations[frame]
+    -- Remove current animation without full restore (don't call Stop)
     lib.activeAnimations[frame] = nil
 
     -- Set queue to target index and start it
     queue.index = index
-    StartQueueEntry(self, frame, prevState)
+    StartQueueEntry(self, frame)
 end
 
 -------------------------------------------------------------------------------
@@ -1091,11 +1052,10 @@ function lib:RemoveQueueEntry(frame, index)
     elseif index == queue.index then
         -- Entry is the currently playing step
         table_remove(queue.entries, index)
-        -- Capture current state for inheritance before clearing
-        local prevState = lib.activeAnimations[frame]
+        -- Stop current animation without full restore
         lib.activeAnimations[frame] = nil
         -- Start whatever is now at queue.index (may be exhausted)
-        StartQueueEntry(self, frame, prevState)
+        StartQueueEntry(self, frame)
     else
         -- Entry is after the current step
         table_remove(queue.entries, index)
