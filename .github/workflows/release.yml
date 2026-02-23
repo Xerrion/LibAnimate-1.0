@@ -4,150 +4,37 @@ on:
   push:
     tags:
       - "*"
-  pull_request:
-    types: [closed]
-    branches:
-      - master
   workflow_dispatch:
     inputs:
       tag_name:
-        description: "Tag to package (e.g. 1.1.2)"
+        description: "Tag name to release"
         required: true
         type: string
 
 permissions:
   contents: write
-  pull-requests: read
 
 jobs:
-  create-tag:
-    name: Create tag from release PR
-    if: >-
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.merged == true &&
-      contains(github.event.pull_request.labels.*.name, 'autorelease')
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.tag.outputs.tag }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Extract version and create tag
-        id: tag
-        shell: bash
-        run: |
-          TITLE="${{ github.event.pull_request.title }}"
-          TAG=$(echo "$TITLE" | grep -oP '\d+\.\d+\.\d+')
-          if [ -z "$TAG" ]; then
-            echo "::error::Could not extract version from PR title: $TITLE"
-            exit 1
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git tag -a "$TAG" -m "Release $TAG"
-          git push origin "$TAG"
-
-  changelog:
-    name: Generate changelog
-    needs: [create-tag]
-    if: >-
-      always() &&
-      github.event_name != 'pull_request' &&
-      (startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch')
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.vars.outputs.tag }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Resolve tag
-        id: vars
-        shell: bash
-        run: |
-          TAG=""
-          if [ -n "${{ needs.create-tag.outputs.tag }}" ]; then
-            TAG="${{ needs.create-tag.outputs.tag }}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ github.event.inputs.tag_name }}"
-          else
-            TAG="${{ github.ref_name }}"
-          fi
-          if [ -z "$TAG" ]; then
-            echo "::error::No tag could be resolved"
-            exit 1
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Generate changelog
-        uses: orhun/git-cliff-action@v4
-        with:
-          config: cliff.toml
-          args: --verbose
-        env:
-          OUTPUT: CHANGELOG.md
-          GITHUB_REPO: ${{ github.repository }}
-
-      - name: Commit changelog to default branch
-        shell: bash
-        run: |
-          BRANCH="${{ github.event.repository.default_branch }}"
-          git switch "$BRANCH"
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add CHANGELOG.md
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git commit -m "Update changelog"
-          git push origin "HEAD:$BRANCH"
-
   package:
-    name: Package
-    needs: [create-tag, changelog]
-    if: >-
-      always() && (
-        needs.create-tag.result == 'success' ||
-        startsWith(github.ref, 'refs/tags/') ||
-        github.event_name == 'workflow_dispatch'
-      )
     runs-on: ubuntu-latest
-    env:
-      CF_API_KEY: ${{ secrets.CF_API_KEY }}
-      WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
-      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Resolve tag
-        id: resolve
-        shell: bash
+        id: tag
         run: |
-          TAG=""
-          if [ -n "${{ needs.create-tag.outputs.tag }}" ]; then
-            TAG="${{ needs.create-tag.outputs.tag }}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ github.event.inputs.tag_name }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
           else
-            TAG="${{ github.ref_name }}"
+            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
           fi
-          if [ -z "$TAG" ]; then
-            echo "::error::No tag could be resolved"
-            exit 1
-          fi
-          echo "TAG_NAME=$TAG" >> "$GITHUB_ENV"
 
-      - name: Checkout tag
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
         with:
-          ref: refs/tags/${{ env.TAG_NAME }}
-          fetch-depth: 0
+          ref: ${{ steps.tag.outputs.tag }}
 
-      - name: Package and upload
-        uses: BigWigsMods/packager@v2
+      - uses: BigWigsMods/packager@v2
+        with:
+          args: -g ${{ steps.tag.outputs.tag }}
         env:
-          GITHUB_REF: refs/tags/${{ env.TAG_NAME }}
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}

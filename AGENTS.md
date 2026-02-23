@@ -46,8 +46,17 @@ A standalone, LibStub-based WoW animation library providing keyframe-driven anim
 Properties: `translateX`, `translateY` (fraction of distance), `scale` (uniform), `alpha` (opacity).
 Coordinate system: WoW (positive Y = up, positive X = right).
 
+## CI/CD
+
+### Release Flow (release-please)
+- `release-please-action` creates/updates a Release PR on every push to master
+- Merging the Release PR creates a git tag + GitHub Release
+- Tag push triggers BigWigsMods/packager for CurseForge + Wago uploads
+- Config: `release-please-config.json`, manifest: `.release-please-manifest.json`
+- DO NOT manually create tags - release-please handles versioning
+
 ## Git Workflow
-- NEVER work on master — feature branches only
+- NEVER work on master - feature branches only
 - Conventional commits: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `ci:`
-- release-please automates versioning — DO NOT manually tag
+- release-please automates versioning (see CI/CD section above)
 - Use PowerShell, not CMD

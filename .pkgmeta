@@ -8,10 +8,9 @@ ignore:
   - .luacheckrc
   - .release
   - "*.md"
-  - cliff.toml
+  - release-please-config.json
+  - .release-please-manifest.json
   - AGENTS.md
   - icon.png
   - LibStub/tests
   - CHANGELOG.md
-  - AGENTS.md
-
