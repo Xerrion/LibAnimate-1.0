@@ -1,6 +1,5 @@
-<p align="center">
-  <img src="https://github.com/Xerrion/LibAnimate/blob/master/icon.png" alt="LibAnimate" width="128" />
-</p>
+<!-- markdownlint-disable-next-line MD041 -->
+![LibAnimate](https://github.com/Xerrion/LibAnimate/blob/master/icon.png?raw=true)
 
 # LibAnimate
 
@@ -17,22 +16,22 @@ LibAnimate is a standalone, LibStub-based animation library that provides smooth
 
 ## Features
 
-- **OnUpdate-driven** â€” Avoids WoW AnimationGroup bugs entirely
-- **Single shared driver frame** â€” All animations run through one OnUpdate handler
-- **Keyframe interpolation** â€” Define animations as keyframes with translate, scale, and alpha
-- **Per-segment easing** â€” Named presets or custom cubic-bezier curves per keyframe segment
-- **77 built-in animations** â€” Entrance, exit, and attention-seeker animations
-- **Extensible** â€” Register custom animations via `RegisterAnimation`
-- **Delay & repeat** â€” Start after a delay, loop animations with `repeatCount`
-- **Animation queues** â€” Chain animations in sequence with per-step callbacks
+- **OnUpdate-driven** - Avoids WoW AnimationGroup bugs entirely
+- **Single shared driver frame** - All animations run through one OnUpdate handler
+- **Keyframe interpolation** - Define animations as keyframes with translate, scale, and alpha
+- **Per-segment easing** - Named presets or custom cubic-bezier curves per keyframe segment
+- **77 built-in animations** - Entrance, exit, and attention-seeker animations
+- **Extensible** - Register custom animations via `RegisterAnimation`
+- **Delay & repeat** - Start after a delay, loop animations with `repeatCount`
+- **Animation queues** - Chain animations in sequence with per-step callbacks
 
 ## Supported Versions
 
-| Version | Interface |
-|---------|-----------|
-| Retail | 110207 |
-| TBC Anniversary | 20505 |
-| MoP Classic | 50503 |
+| Version         | Interface |
+|-----------------|-----------|
+| Retail          | 110207    |
+| TBC Anniversary | 20505     |
+| MoP Classic     | 50503     |
 
 ## Installation
 
@@ -42,17 +41,13 @@ For addon authors using [BigWigsMods/packager](https://github.com/BigWigsMods/pa
 
 ```yaml
 externals:
-  Libs/LibStub:
-    url: https://repos.wowace.com/wow/libstub/trunk
-    tag: latest
-  Libs/LibAnimate:
-    url: https://github.com/Xerrion/LibAnimate
+  Libs/LibStub: https://repos.wowace.com/wow/libstub/trunk
+  Libs/LibAnimate: https://github.com/Xerrion/LibAnimate
 ```
 
 Then in your `.toc` file:
 
-```
-Libs\LibStub\LibStub.lua
+```text
 Libs\LibAnimate\lib.xml
 ```
 
@@ -60,8 +55,7 @@ Libs\LibAnimate\lib.xml
 
 Download the library and place it in your addon's `Libs/` folder. Load `lib.xml` after LibStub in your `.toc`:
 
-```
-Libs\LibStub\LibStub.lua
+```text
 Libs\LibAnimate\lib.xml
 ```
 
@@ -102,37 +96,37 @@ LibAnimate:Stop(myFrame)
 
 ## API Overview
 
-| Method | Description |
-|--------|-------------|
-| `Animate(frame, name, opts?)` | Play an animation on a frame |
-| `Stop(frame)` | Stop and restore to pre-animation state |
-| `UpdateAnchor(frame, x, y)` | Update base anchor during animation |
-| `IsAnimating(frame)` | Check if a frame is animating |
-| `GetAnimationInfo(name)` | Get an animation's definition table |
-| `GetAnimationNames()` | List all registered animation names |
-| `GetEntranceAnimations()` | List entrance animation names |
-| `GetExitAnimations()` | List exit animation names |
-| `GetAttentionAnimations()` | List attention seeker names |
+| Method                         | Description                               |
+|--------------------------------|-------------------------------------------|
+| `Animate(frame, name, opts?)`  | Play an animation on a frame              |
+| `Stop(frame)`                  | Stop and restore to pre-animation state   |
+| `UpdateAnchor(frame, x, y)`    | Update base anchor during animation       |
+| `IsAnimating(frame)`           | Check if a frame is animating             |
+| `GetAnimationInfo(name)`       | Get an animation's definition table       |
+| `GetAnimationNames()`          | List all registered animation names       |
+| `GetEntranceAnimations()`      | List entrance animation names             |
+| `GetExitAnimations()`          | List exit animation names                 |
+| `GetAttentionAnimations()`     | List attention seeker names               |
 | `Queue(frame, entries, opts?)` | Queue a sequence of animations on a frame |
-| `ClearQueue(frame)` | Cancel an animation queue and stop |
-| `IsQueued(frame)` | Check if a frame has a pending queue |
-| `RegisterAnimation(name, def)` | Register a custom animation |
+| `ClearQueue(frame)`            | Cancel an animation queue and stop        |
+| `IsQueued(frame)`              | Check if a frame has a pending queue      |
+| `RegisterAnimation(name, def)` | Register a custom animation               |
 
 For detailed parameters, return types, and examples, see the **[API Reference](https://github.com/Xerrion/LibAnimate/wiki/API-Reference)**.
 
 ## Built-in Animations
 
-| Category | Count |
-|----------|-------|
-| Attention Seekers | 10 |
-| Back | 8 |
-| Bouncing | 10 |
-| Fading | 26 |
-| Sliding | 8 |
-| Zooming | 10 |
-| Specials | 1 |
-| Utility | 4 |
-| **Total** | **77** |
+| Category          | Count  |
+|-------------------|--------|
+| Attention Seekers | 10     |
+| Back              | 8      |
+| Bouncing          | 10     |
+| Fading            | 26     |
+| Sliding           | 8      |
+| Zooming           | 10     |
+| Specials          | 1      |
+| Utility           | 4      |
+| **Total**         | **77** |
 
 Browse the full catalog with descriptions in the **[Animation Catalog](https://github.com/Xerrion/LibAnimate/wiki/Animation-Catalog)**.
 
@@ -140,12 +134,12 @@ Browse the full catalog with descriptions in the **[Animation Catalog](https://g
 
 For comprehensive documentation, visit the **[LibAnimate Wiki](https://github.com/Xerrion/LibAnimate/wiki)**:
 
-- **[Getting Started](https://github.com/Xerrion/LibAnimate/wiki/Getting-Started)** â€” Installation, first animation, key concepts
-- **[API Reference](https://github.com/Xerrion/LibAnimate/wiki/API-Reference)** â€” Complete method documentation
-- **[Animation Catalog](https://github.com/Xerrion/LibAnimate/wiki/Animation-Catalog)** â€” All 77 built-in animations
-- **[Custom Animations](https://github.com/Xerrion/LibAnimate/wiki/Custom-Animations)** â€” Create your own animations
-- **[Easing Functions](https://github.com/Xerrion/LibAnimate/wiki/Easing-Functions)** â€” Presets and cubic-bezier curves
+- **[Getting Started](https://github.com/Xerrion/LibAnimate/wiki/Getting-Started)** - Installation, first animation, key concepts
+- **[API Reference](https://github.com/Xerrion/LibAnimate/wiki/API-Reference)** - Complete method documentation
+- **[Animation Catalog](https://github.com/Xerrion/LibAnimate/wiki/Animation-Catalog)** - All 77 built-in animations
+- **[Custom Animations](https://github.com/Xerrion/LibAnimate/wiki/Custom-Animations)** - Create your own animations
+- **[Easing Functions](https://github.com/Xerrion/LibAnimate/wiki/Easing-Functions)** - Presets and cubic-bezier curves
 
 ## License
 
-MIT â€” See [LICENSE](LICENSE) file.
+MIT - See [LICENSE](https://github.com/Xerrion/LibAnimate/blob/master/LICENSE) file.
