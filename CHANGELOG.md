@@ -3,6 +3,25 @@
 ### 🚀 Features
 
 - Bundle LibStub directly in repo (#29)
+## [3.5.2](https://github.com/Xerrion/LibAnimate/compare/3.5.1...3.5.2) (2026-02-23)
+
+
+### Bug Fixes
+
+* libstub external ([#39](https://github.com/Xerrion/LibAnimate/issues/39)) ([8b554ce](https://github.com/Xerrion/LibAnimate/commit/8b554ce660012d7c872034bfc9dbe9323ac685bd))
+
+## [3.5.1](https://github.com/Xerrion/LibAnimate/compare/3.5.0...3.5.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* preserve slide state across queue entry transitions ([#38](https://github.com/Xerrion/LibAnimate/issues/38)) ([9bdbcf8](https://github.com/Xerrion/LibAnimate/commit/9bdbcf8a3caff9d93894e577c64479108ab28a94))
+
+
+### CI/CD
+
+* streamline GitHub release workflows ([#36](https://github.com/Xerrion/LibAnimate/issues/36)) ([0a72408](https://github.com/Xerrion/LibAnimate/commit/0a724088821b3f6121cd5ffc95853937715e04cc))
+
 ## [3.5.0](https://github.com/Xerrion/LibAnimate/compare/3.4.0...3.5.0) (2026-02-23)
 
 

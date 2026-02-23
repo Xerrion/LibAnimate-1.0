@@ -796,21 +796,50 @@ local function StartQueueEntry(self, frame, inheritState)
         end
     end
 
-    -- Set onFinished: captures newState for next entry's inheritance
-    newState.onFinished = function(f)
-        if entry.onFinished then
-            local ok, err = pcall(entry.onFinished, f)
-            if not ok then geterrorhandler()(err) end
-        end
-        local q = lib.animationQueues[f]
-        if q then
-            q.index = q.index + 1
-            StartQueueEntry(self, f, newState)
-        end
+    -- Preserve slide state from current animation before Animate() destroys it.
+    -- When a queue transitions between entries, Animate() calls Stop() which
+    -- restores the frame to its pre-animation anchor and wipes all state.
+    -- Without this, a SlideAnchor call that started during a previous entry
+    -- would be lost, snapping the frame to a stale position.
+    local prevState = lib.activeAnimations[frame]
+    local savedSlide
+    if prevState and prevState.slideStartTime then
+        savedSlide = {
+            anchorX = prevState.anchorX,
+            anchorY = prevState.anchorY,
+            slideFromX = prevState.slideFromX,
+            slideFromY = prevState.slideFromY,
+            slideToX = prevState.slideToX,
+            slideToY = prevState.slideToY,
+            slideDuration = prevState.slideDuration,
+            slideStartTime = prevState.slideStartTime,
+            slideElapsedAtPause = prevState.slideElapsedAtPause,
+        }
     end
 
-    lib.activeAnimations[frame] = newState
-    driverFrame:Show()
+    -- Save/restore queue around Animate() since it clears queues
+    local savedQueue = self.animationQueues[frame]
+    self:Animate(frame, entry.name, opts)
+    self.animationQueues[frame] = savedQueue
+
+    -- Restore in-progress slide state onto the new animation state.
+    -- This includes anchorX/Y so the frame continues from its current
+    -- mid-slide position rather than snapping to the anchor that
+    -- Stop() restored during the Animate() call.
+    if savedSlide then
+        local newState = lib.activeAnimations[frame]
+        if newState then
+            newState.anchorX = savedSlide.anchorX
+            newState.anchorY = savedSlide.anchorY
+            newState.slideFromX = savedSlide.slideFromX
+            newState.slideFromY = savedSlide.slideFromY
+            newState.slideToX = savedSlide.slideToX
+            newState.slideToY = savedSlide.slideToY
+            newState.slideDuration = savedSlide.slideDuration
+            newState.slideStartTime = savedSlide.slideStartTime
+            newState.slideElapsedAtPause = savedSlide.slideElapsedAtPause
+        end
+    end
 end
 
 lib._startQueueEntry = StartQueueEntry
