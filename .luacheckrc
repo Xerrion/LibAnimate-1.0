@@ -2,6 +2,10 @@ std = "lua51"
 max_line_length = 120
 codes = true
 
+exclude_files = {
+    "LibStub/*",
+}
+
 ignore = {
     "212/self",
 }
