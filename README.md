@@ -1,5 +1,5 @@
-<!-- markdownlint-disable-next-line MD041 -->
-![LibAnimate](https://github.com/Xerrion/LibAnimate/blob/master/assets/logo-libanimate-400x400.png?raw=true)
+<!-- markdownlint-disable-next-line MD041 MD033 -->
+<p align="center"><img src="https://github.com/Xerrion/LibAnimate/blob/master/assets/logo-libanimate-400x400.png?raw=true" alt="LibAnimate Logo" /></p>
 
 # LibAnimate
 
@@ -28,7 +28,7 @@ LibAnimate is a standalone, LibStub-based animation library that provides smooth
 ## Supported Versions
 
 | Version         | Interface |
-|-----------------|-----------|
+| --------------- | --------- |
 | Retail          | 110207    |
 | TBC Anniversary | 20505     |
 | MoP Classic     | 50503     |
@@ -97,7 +97,7 @@ LibAnimate:Stop(myFrame)
 ## API Overview
 
 | Method                         | Description                               |
-|--------------------------------|-------------------------------------------|
+| ------------------------------ | ----------------------------------------- |
 | `Animate(frame, name, opts?)`  | Play an animation on a frame              |
 | `Stop(frame)`                  | Stop and restore to pre-animation state   |
 | `UpdateAnchor(frame, x, y)`    | Update base anchor during animation       |
@@ -117,7 +117,7 @@ For detailed parameters, return types, and examples, see the **[API Reference](h
 ## Built-in Animations
 
 | Category          | Count  |
-|-------------------|--------|
+| ----------------- | ------ |
 | Attention Seekers | 10     |
 | Back              | 8      |
 | Bouncing          | 10     |
