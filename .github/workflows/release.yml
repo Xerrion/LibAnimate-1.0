@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: "Tag name to release"
+        description: "Tag to package (e.g. 1.4.3)"
         required: true
         type: string
 
@@ -16,25 +16,32 @@ permissions:
 
 jobs:
   package:
+    name: Package and Upload
     runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Resolve tag
-        id: tag
+        id: resolve
+        shell: bash
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
+            TAG="${{ github.event.inputs.tag_name }}"
           else
-            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            TAG="${{ github.ref_name }}"
           fi
+          echo "TAG_NAME=$TAG" >> "$GITHUB_ENV"
 
-      - uses: actions/checkout@v5
+      - name: Checkout tag
+        uses: actions/checkout@v5
         with:
-          ref: ${{ steps.tag.outputs.tag }}
+          ref: refs/tags/${{ env.TAG_NAME }}
+          fetch-depth: 0
 
-      - uses: BigWigsMods/packager@v2
-        with:
-          args: -g ${{ steps.tag.outputs.tag }}
+      - name: Package and upload
+        uses: BigWigsMods/packager@v2
         env:
-          CF_API_KEY: ${{ secrets.CF_API_KEY }}
-          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
-          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: refs/tags/${{ env.TAG_NAME }}
+          
