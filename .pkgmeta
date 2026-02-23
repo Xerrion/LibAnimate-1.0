@@ -11,7 +11,7 @@ ignore:
   - cliff.toml
   - AGENTS.md
   - icon.png
-  - LibStub/tests
+  - Libs/LibStub/tests
   - CHANGELOG.md
   - AGENTS.md
 
