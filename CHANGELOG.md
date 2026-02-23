@@ -3,6 +3,14 @@
 ### 🚀 Features
 
 - Bundle LibStub directly in repo (#29)
+## [3.5.4](https://github.com/Xerrion/LibAnimate/compare/3.5.3...3.5.4) (2026-02-23)
+
+
+### Bug Fixes
+
+* revert 3.5.2 and 3.5.3 (broken slide state transition) ([#44](https://github.com/Xerrion/LibAnimate/issues/44)) ([edcd67b](https://github.com/Xerrion/LibAnimate/commit/edcd67b935fcc09f6807c2f579bf807b1af78638))
+* set manifest version to 3.5.3 to skip broken releases ([#46](https://github.com/Xerrion/LibAnimate/issues/46)) ([7e7870f](https://github.com/Xerrion/LibAnimate/commit/7e7870f9198c8ed0f0fed9f5682f295ce0b985c7))
+
 ## [3.5.1](https://github.com/Xerrion/LibAnimate/compare/3.5.0...3.5.1) (2026-02-23)
 
 
