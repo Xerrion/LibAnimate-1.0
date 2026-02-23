@@ -1,5 +1,5 @@
 <!-- markdownlint-disable-next-line MD041 -->
-![LibAnimate](https://github.com/Xerrion/LibAnimate/blob/master/icon.png?raw=true)
+![LibAnimate](https://github.com/Xerrion/LibAnimate/blob/master/assets/logo-libanimate-400x400.png?raw=true)
 
 # LibAnimate
 
