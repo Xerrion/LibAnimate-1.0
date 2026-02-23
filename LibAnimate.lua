@@ -801,7 +801,7 @@ local function StartQueueEntry(self, frame, inheritState)
     -- restores the frame to its pre-animation anchor and wipes all state.
     -- Without this, a SlideAnchor call that started during a previous entry
     -- would be lost, snapping the frame to a stale position.
-    local prevState = lib.activeAnimations[frame]
+    prevState = lib.activeAnimations[frame]
     local savedSlide
     if prevState and prevState.slideStartTime then
         savedSlide = {
@@ -819,7 +819,12 @@ local function StartQueueEntry(self, frame, inheritState)
 
     -- Save/restore queue around Animate() since it clears queues
     local savedQueue = self.animationQueues[frame]
-    self:Animate(frame, entry.name, opts)
+    self:Animate(frame, entry.name, {
+        duration = entry.duration,
+        distance = entry.distance,
+        delay = entry.delay,
+        repeatCount = entry.repeatCount,
+    })
     self.animationQueues[frame] = savedQueue
 
     -- Restore in-progress slide state onto the new animation state.
@@ -827,7 +832,7 @@ local function StartQueueEntry(self, frame, inheritState)
     -- mid-slide position rather than snapping to the anchor that
     -- Stop() restored during the Animate() call.
     if savedSlide then
-        local newState = lib.activeAnimations[frame]
+        newState = lib.activeAnimations[frame]
         if newState then
             newState.anchorX = savedSlide.anchorX
             newState.anchorY = savedSlide.anchorY
