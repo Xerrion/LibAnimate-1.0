@@ -3,6 +3,20 @@
 ### 🚀 Features
 
 - Bundle LibStub directly in repo (#29)
+## [3.5.5](https://github.com/Xerrion/LibAnimate/compare/3.5.4...3.5.5) (2026-02-24)
+
+
+### Bug Fixes
+
+* apply initial keyframe immediately in Animate() to prevent frame overlap ([#48](https://github.com/Xerrion/LibAnimate/issues/48)) ([b5ea1d2](https://github.com/Xerrion/LibAnimate/commit/b5ea1d26d35bd44e1ecf278b098775028f1c2087))
+* harden callback safety, SlideAnchor guards, and easing validation ([#52](https://github.com/Xerrion/LibAnimate/issues/52)) ([bf71c6a](https://github.com/Xerrion/LibAnimate/commit/bf71c6ad01bc0ff5213d7bfb503dfb465c2ab933))
+* prevent anchor drift when animations complete with an onFinished callback ([#47](https://github.com/Xerrion/LibAnimate/issues/47)) ([e4a9d04](https://github.com/Xerrion/LibAnimate/commit/e4a9d04a61c36a12d07f2f2e03058888bbe5bec8))
+
+
+### Documentation
+
+* add bug report and feature request issue templates ([#53](https://github.com/Xerrion/LibAnimate/issues/53)) ([ec638f6](https://github.com/Xerrion/LibAnimate/commit/ec638f6462bd77061cd4a9e7f8bcd997e5a41a83))
+
 ## [3.5.4](https://github.com/Xerrion/LibAnimate/compare/3.5.3...3.5.4) (2026-02-23)
 
 
