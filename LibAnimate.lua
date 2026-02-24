@@ -85,6 +85,7 @@ if not lib then return end
 local GetTime = GetTime
 local CreateFrame = CreateFrame
 local geterrorhandler = geterrorhandler
+local pcall = pcall
 local pairs = pairs
 local next = next
 local ipairs = ipairs
@@ -532,7 +533,10 @@ driverFrame:SetScript("OnUpdate", function()
         -- start a new animation (i.e. the slot still holds the completed state).
         if callbacks then
             for _, cb in ipairs(callbacks) do
-                cb.fn(cb.frame)
+                local ok, err = pcall(cb.fn, cb.frame)
+                if not ok then
+                    geterrorhandler()(err)
+                end
                 if lib.activeAnimations[cb.frame] == cb.state then
                     lib.activeAnimations[cb.frame] = nil
                 end
@@ -756,7 +760,12 @@ local function StartQueueEntry(self, frame)
         -- Queue exhausted
         local onFinished = queue.onFinished
         self.animationQueues[frame] = nil
-        if onFinished then onFinished(frame) end
+        if onFinished then
+            local ok, err = pcall(onFinished, frame)
+            if not ok then
+                geterrorhandler()(err)
+            end
+        end
         return
     end
 
@@ -967,8 +976,8 @@ end
 --- running animation continues calculating offsets relative to the
 --- smoothly-moving base position.
 ---
---- If the frame has no active animation, performs a direct `UpdateAnchor`
---- call instead. If a slide is already in progress, snaps the current
+--- Requires an active animation on the frame; errors otherwise.
+--- If a slide is already in progress, snaps the current
 --- slide to completion before starting the new one.
 ---
 --- The slide respects pause state: while paused, slide progress does not
@@ -980,9 +989,11 @@ end
 function lib:SlideAnchor(frame, newX, newY, duration)
     local state = lib.activeAnimations[frame]
     if not state then
-        -- No active animation — direct update
-        self:UpdateAnchor(frame, newX, newY)
-        return
+        error("LibAnimate: SlideAnchor requires an active animation on the frame", 2)
+    end
+
+    if type(duration) ~= "number" or duration <= 0 then
+        error("LibAnimate: SlideAnchor duration must be a positive number", 2)
     end
 
     -- If already sliding, snap current slide to completion first
@@ -1266,6 +1277,25 @@ function lib:RegisterAnimation(name, definition)
     for i = 2, #keyframes do
         if keyframes[i].progress < keyframes[i - 1].progress then
             error("LibAnimate: Keyframes must be sorted by progress (ascending)", 2)
+        end
+    end
+
+    -- Validate per-keyframe easing
+    for i = 1, #keyframes do
+        local kf = keyframes[i]
+        if kf.easing ~= nil then
+            if type(kf.easing) == "table" then
+                if #kf.easing ~= 4 then
+                    error("LibAnimate: cubic-bezier easing must have exactly 4 values", 2)
+                end
+                for j = 1, 4 do
+                    if type(kf.easing[j]) ~= "number" then
+                        error("LibAnimate: cubic-bezier easing values must be numbers", 2)
+                    end
+                end
+            elseif type(kf.easing) ~= "string" then
+                error("LibAnimate: keyframe easing must be a string or a cubic-bezier table", 2)
+            end
         end
     end
 
