@@ -656,6 +656,18 @@ function lib:Animate(frame, name, opts)
     lib.activeAnimations[frame] = state
     driverFrame:Show()
 
+    -- Apply first keyframe immediately so frames are placed at their
+    -- animation start positions right away. Without this, entrance
+    -- animations leave the frame visible at its original anchor until
+    -- the next OnUpdate tick, which causes overlapping frames when
+    -- multiple animations are started in quick succession.
+    local kf1 = def.keyframes[1]
+    ApplyToFrame(frame, state,
+        GetProperty(kf1, "translateX"),
+        GetProperty(kf1, "translateY"),
+        GetProperty(kf1, "scale"),
+        GetProperty(kf1, "alpha"))
+
     return true
 end
 
