@@ -40,6 +40,9 @@ jobs:
           ref: refs/tags/${{ env.TAG_NAME }}
           fetch-depth: 0
 
+      - name: Generate changelog
+        run: bash scripts/generate_changelog.sh
+
       - name: Package and upload
         uses: BigWigsMods/packager@v2
         env:
