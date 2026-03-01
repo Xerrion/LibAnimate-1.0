@@ -3,6 +3,20 @@
 ### 🚀 Features
 
 - Bundle LibStub directly in repo (#29)
+## [3.5.6](https://github.com/Xerrion/LibAnimate/compare/3.5.5...3.5.6) (2026-03-01)
+
+
+### Bug Fixes
+
+* add contents:write permission to release workflow ([16d6853](https://github.com/Xerrion/LibAnimate/commit/16d6853e6d23ba63ea61d8be4dffda39798fe183))
+* add permissions to caller workflow ([#56](https://github.com/Xerrion/LibAnimate/issues/56)) ([e3f84d8](https://github.com/Xerrion/LibAnimate/commit/e3f84d8fed70e2f3fb88196469b5f2c56350c8fa))
+
+
+### CI/CD
+
+* add proper changelog ([b685083](https://github.com/Xerrion/LibAnimate/commit/b685083811d444d22da1ded29c883542f1dc6db0))
+* migrate reusable workflows to DragonAddons org ([9c8aa6d](https://github.com/Xerrion/LibAnimate/commit/9c8aa6d9c6e17089f0e0bde023201c4449541c02))
+
 ## [3.5.5](https://github.com/Xerrion/LibAnimate/compare/3.5.4...3.5.5) (2026-02-24)
 
 
