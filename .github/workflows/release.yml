@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   release:
-    uses: Xerrion/wow-workflows/.github/workflows/release.yml@main
+    uses: DragonAddons/wow-workflows/.github/workflows/release.yml@main
     with:
       tag_name: ${{ inputs.tag_name || '' }}
     secrets: inherit

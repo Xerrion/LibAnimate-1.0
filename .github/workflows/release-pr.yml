@@ -10,5 +10,5 @@ permissions:
 
 jobs:
   release-pr:
-    uses: Xerrion/wow-workflows/.github/workflows/release-pr.yml@main
+    uses: DragonAddons/wow-workflows/.github/workflows/release-pr.yml@main
     secrets: inherit
