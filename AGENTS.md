@@ -49,10 +49,30 @@ No build step. Lua files are loaded directly by the WoW client. Distribution pac
 - `std = "lua51"` -- WoW uses Lua 5.1
 - Use **PowerShell**, not CMD
 
-### Naming Conventions
-- `PascalCase` for public/API functions: `Animate`, `RegisterAnimation`, `GetQueueInfo`
-- `camelCase` for local variables and private functions: `animData`, `defaultDuration`
-- `UPPER_SNAKE_CASE` for constants: `PROPERTY_DEFAULTS`, `MAJOR`, `MINOR`
+### File Header
+Every Lua file starts with:
+
+```lua
+-------------------------------------------------------------------------------
+-- FileName.lua
+-- Brief description
+--
+-- Supported versions: Retail, MoP Classic, TBC Anniversary, Cata, Classic
+-------------------------------------------------------------------------------
+```
+
+### Naming
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Files | PascalCase | `MyAddon_Core.lua` |
+| SavedVariables | PascalCase | `MyAddonDB` |
+| Local variables | camelCase | `local currentState` |
+| Functions (public or local) | PascalCase | `local function UpdateState()` |
+| Constants | UPPER_SNAKE | `local MAX_RETRIES = 5` |
+| Slash commands | UPPER_SNAKE | `SLASH_MYADDON1` |
+| Color codes | UPPER_SNAKE | `local COLOR_RED = "\|cffff0000"` |
+| Unused args | underscore prefix | `local _unused` |
 
 ### Globals and Caching
 Cache WoW API globals as locals at the top of the file:
@@ -98,6 +118,26 @@ Use LuaLS annotations for all public types and APIs:
 - Keep functions under 50 lines; extract helpers when longer
 - Prefer composition over inheritance
 
+---
+
+## Versioning and File Loading
+- Do not gate features with runtime version checks
+- Split version-specific code into separate files
+- Load with TOC `## Interface` / `## Interface-*` directives or packager comment
+  directives (`#@retail@`, `#@non-retail@`)
+
+Packager directives are comments locally, so later files can override earlier ones.
+
+---
+
+## Common Pitfalls
+- Missing APIs for a target version -- check `docs/` for the exact client build
+- Deprecated globals like `COMBATLOGENABLED` and `COMBATLOGDISABLED` (removed in Cata;
+  always provide `or` fallbacks)
+- Race conditions on `PLAYER_ENTERING_WORLD` -- use a short `C_Timer.After` delay
+- Timer leaks -- cancel `C_Timer` or `AceTimer` handles before reusing
+- `GetItemInfo` or item data can be nil on first call -- retry with a timer
+
 ## Animation Definition Format
 
 ```lua
@@ -141,14 +181,93 @@ Use LuaLS annotations for all public types and APIs:
 | `chore:` | Miscellaneous | Yes |
 | `revert:` | Reverts | No |
 
-## Git Workflow
-- NEVER work on master -- feature branches only
-- Conventional commits required (see table above)
-- release-please automates versioning (see CI/CD section)
-- Use PowerShell, not CMD
+## GitHub Workflow
+
+### Issues
+Create issues using the repo's issue templates (`.github/ISSUE_TEMPLATE/`):
+- **Bug reports**: Use `bug-report.yml` template. Title prefix: `[Bug]: `
+- **Feature requests**: Use `feature-request.yml` template. Title prefix: `[Feature]: `
+
+Create via CLI:
+```bash
+gh issue create --repo <ORG>/<REPO> --label "bug" --title "[Bug]: <title>" --body "<body matching template fields>"
+gh issue create --repo <ORG>/<REPO> --label "enhancement" --title "[Feature]: <title>" --body "<body matching template fields>"
+```
+
+### Branches
+Use conventional branch prefixes:
+
+| Prefix | Purpose | Example |
+|--------|---------|---------|
+| `feat/` | New feature | `feat/87-mail-toasts` |
+| `fix/` | Bug fix | `fix/99-anchor-zorder` |
+| `refactor/` | Code improvement | `refactor/96-listener-utils` |
+
+Include the issue number in the branch name when linked to an issue.
+
+### Commits
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+- `feat: <description> (#issue)` - new feature
+- `fix: <description> (#issue)` - bug fix
+- `refactor: <description> (#issue)` - code restructuring
+- `docs: <description>` - documentation only
+
+Always use `--no-gpg-sign` (GPG signing not available in CI agent environments).
+
+### Pull Requests
+1. Create PRs via CLI using the repo's `.github/PULL_REQUEST_TEMPLATE.md` format
+2. Link to the issue with `Closes #N` in the PR body
+3. PRs require passing status checks (luacheck, test) before merge
+4. Squash merge only: `gh pr merge <number> --squash`
+5. Branches are auto-deleted after merge
+
+### Project Boards
+When a repo has a GitHub Projects board, update issue status as work progresses:
+
+| Phase | Board Status | Action |
+|-------|-------------|--------|
+| Triaged/planned | Ready | Issue is understood and ready for work |
+| Work starts | In progress | Add comment describing the approach |
+| PR created | In review | Add comment with PR link |
+| PR merged | Done | Auto-updated by GitHub automation or manual move |
+
+Use `gh project` CLI commands to update board status:
+```bash
+gh project item-list <PROJECT_NUMBER> --owner <ORG> --format json
+gh project field-list <PROJECT_NUMBER> --owner <ORG> --format json
+gh project item-edit --project-id <ID> --id <ITEM_ID> --field-id <FIELD_ID> --single-select-option-id <OPTION_ID>
+```
+
+Add comments on issues at each phase transition to maintain a clear audit trail.
 
 ## Packaging (.pkgmeta)
 - `package-as`: LibAnimate
 - `enable-toc-creation`: yes
 - External dependency: LibStub (from wowace repos)
 - Ignored in package: `.md` files, `.github/`, config files, `AGENTS.md`, `icon.png`, LibStub tests
+
+---
+
+## Working Agreement for Agents
+- Addon-level AGENTS.md overrides root rules when present
+- Do not add new dependencies without discussing trade-offs
+- Run luacheck before and after changes
+- If only manual tests exist, document what you verified in-game
+- Verify changes in the game client when possible
+- Keep changes small and focused; prefer composition over inheritance
+
+---
+
+## Communication Style
+
+When responding to or commenting on issues, always write in **first-person singular** ("I")
+as the repo owner -- never use "we" or "our team". Speak as if you are the developer personally.
+
+**Writing style:**
+- Direct, structured, solution-driven. Get to the point fast. Text is a tool, not decoration.
+- Think in systems. Break things into flows, roles, rules, and frameworks.
+- Bias toward precision. Concrete output, copy-paste-ready solutions, clear constraints. Low
+  tolerance for fluff.
+- Tone is calm and rational with small flashes of humor and self-awareness.
+- When confident in a topic, become more informal and creative.
+- When something matters, become sharp and focused.

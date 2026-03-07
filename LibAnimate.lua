@@ -76,6 +76,8 @@ if not lib then return end
 ---@field anchorY number Captured anchor Y offset
 ---@field originalScale number Pre-animation scale
 ---@field originalAlpha number Pre-animation alpha
+---@field hasScale boolean Whether the animation defines scale keyframes
+---@field hasTranslate boolean Whether the animation defines translate keyframes
 ---@field resolvedEasings table<integer, fun(t: number): number>
 
 -------------------------------------------------------------------------------
@@ -371,28 +373,33 @@ end
 -------------------------------------------------------------------------------
 
 --- Applies interpolated animation properties to a frame.
---- Computes the final anchor offset from translation fractions and distance,
---- repositions the frame, and sets scale and alpha. Scale is clamped to a
---- minimum of 0.001 to prevent WoW `SetScale(0)` errors.
+--- Only modifies properties that the animation actually defines:
+--- - Alpha is always applied (backward compatible with slide animations)
+--- - Translate is only applied when `state.hasTranslate` is true
+--- - Scale is only applied when `state.hasScale` is true, and is relative
+---   to `state.originalScale` so user-configured scale is preserved
 ---@param frame Frame The frame being animated
 ---@param state AnimationState The active animation state
 ---@param tx number Interpolated translateX (fraction of distance)
 ---@param ty number Interpolated translateY (fraction of distance)
----@param sc number Interpolated scale factor
+---@param sc number Interpolated scale factor (relative to originalScale)
 ---@param al number Interpolated alpha (opacity)
 local function ApplyToFrame(frame, state, tx, ty, sc, al)
-    local distance = state.distance or 0
+    if state.hasTranslate then
+        local distance = state.distance or 0
+        local offsetX = tx * distance
+        local offsetY = ty * distance
+        frame:ClearAllPoints()
+        frame:SetPoint(state.anchorPoint, state.anchorRelativeTo, state.anchorRelativePoint,
+            state.anchorX + offsetX, state.anchorY + offsetY)
+    end
 
-    local offsetX = tx * distance
-    local offsetY = ty * distance
+    if state.hasScale then
+        local finalScale = sc * (state.originalScale or 1)
+        if finalScale < 0.001 then finalScale = 0.001 end
+        frame:SetScale(finalScale)
+    end
 
-    frame:ClearAllPoints()
-    frame:SetPoint(state.anchorPoint, state.anchorRelativeTo, state.anchorRelativePoint,
-        state.anchorX + offsetX, state.anchorY + offsetY)
-
-    -- Clamp scale to minimum to prevent SetScale(0) errors (P4)
-    if sc < 0.001 then sc = 0.001 end
-    frame:SetScale(sc)
     frame:SetAlpha(al)
 end
 
@@ -634,6 +641,16 @@ function lib:Animate(frame, name, opts)
         end
     end
 
+    -- Determine which properties the animation actually defines.
+    -- Alpha is always animated (backward compatible: slide animations rely
+    -- on the default alpha=1.0 being applied every tick).
+    -- Scale and translate are conditional to avoid overriding user-configured values.
+    local hasScale, hasTranslate = false, false
+    for _, kf in ipairs(def.keyframes) do
+        if kf.scale ~= nil then hasScale = true end
+        if kf.translateX ~= nil or kf.translateY ~= nil then hasTranslate = true end
+    end
+
     local delay = opts.delay or 0
     if type(delay) ~= "number" or delay < 0 then
         error("LibAnimate: delay must be a non-negative number", 2)
@@ -661,6 +678,8 @@ function lib:Animate(frame, name, opts)
         anchorY = y or 0,
         originalScale = originalScale,
         originalAlpha = originalAlpha,
+        hasScale = hasScale,
+        hasTranslate = hasTranslate,
         resolvedEasings = resolvedEasings,
     }
 
@@ -683,7 +702,8 @@ function lib:Animate(frame, name, opts)
 end
 
 --- Stops the animation on a frame and restores it to its pre-animation state.
---- Restores the original anchor position, scale, and alpha captured at animation start.
+--- Only restores properties that the animation actually modified:
+--- translate and scale are conditional, alpha is always restored.
 --- If the frame has an active animation queue, the queue is also cleared.
 --- Does nothing if the frame is not currently animating and has no queue.
 --- The `onFinished` callback is NOT fired when an animation is stopped.
@@ -695,11 +715,15 @@ function lib:Stop(frame)
     local state = lib.activeAnimations[frame]
     if not state then return end
 
-    -- Restore to base anchor with clean state
-    frame:ClearAllPoints()
-    frame:SetPoint(state.anchorPoint, state.anchorRelativeTo, state.anchorRelativePoint,
-        state.anchorX, state.anchorY)
-    frame:SetScale(state.originalScale)
+    -- Restore only properties that were animated
+    if state.hasTranslate then
+        frame:ClearAllPoints()
+        frame:SetPoint(state.anchorPoint, state.anchorRelativeTo, state.anchorRelativePoint,
+            state.anchorX, state.anchorY)
+    end
+    if state.hasScale then
+        frame:SetScale(state.originalScale)
+    end
     frame:SetAlpha(state.originalAlpha)
 
     lib.activeAnimations[frame] = nil
