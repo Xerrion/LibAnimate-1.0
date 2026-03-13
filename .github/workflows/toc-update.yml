@@ -1,0 +1,16 @@
+name: TOC Update
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    uses: DragonAddons/wow-workflows/.github/workflows/toc-update.yml@main
+    with:
+      flavors: "retail classic tbc"
