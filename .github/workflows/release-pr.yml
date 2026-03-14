@@ -10,5 +10,11 @@ permissions:
 
 jobs:
   release-pr:
-    uses: DragonAddons/wow-workflows/.github/workflows/release-pr.yml@main
-    secrets: inherit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

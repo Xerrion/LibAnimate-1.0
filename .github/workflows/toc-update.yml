@@ -7,10 +7,70 @@ on:
 
 permissions:
   contents: write
+  issues: write
   pull-requests: write
 
 jobs:
   update:
-    uses: DragonAddons/wow-workflows/.github/workflows/toc-update.yml@main
-    with:
-      flavors: "retail classic tbc"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: master
+
+      - name: Update TOC versions
+        shell: bash
+        env:
+          FLAVORS: retail classic tbc
+        run: |
+          args=()
+          for flavor in $FLAVORS; do
+            args+=(--flavor "$flavor")
+          done
+          bash scripts/update_toc_versions.sh "${args[@]}"
+
+      - name: Check for changes
+        id: diff
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No TOC changes detected"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "TOC changes detected:"
+            git diff --name-only
+          fi
+
+      - name: Create or update PR
+        if: steps.diff.outputs.has_changes == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH="chore/toc-interface-version"
+          TITLE="chore: update TOC Interface versions"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git checkout -B "$BRANCH"
+
+          git add -A '*.toc'
+          git commit -m "$TITLE"
+
+          git push --force-with-lease origin "$BRANCH"
+
+          gh label create "automated" --description "Auto-generated changes" --color "ededed" 2>/dev/null || true
+
+          if ! gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number' | grep -q .; then
+            gh pr create \
+              --base "master" \
+              --head "$BRANCH" \
+              --title "$TITLE" \
+              --body "Automated update of \`## Interface\` versions in TOC files based on latest Blizzard CDN data." \
+              --label "automated"
+          else
+            echo "PR already exists for branch ${BRANCH}, force-push updated it"
+          fi
