@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
   pull-requests: write
 
 jobs:
@@ -45,6 +46,8 @@ jobs:
       - name: Create or update PR
         if: steps.diff.outputs.has_changes == 'true'
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           BRANCH="chore/toc-interface-version"
           TITLE="chore: update TOC Interface versions"

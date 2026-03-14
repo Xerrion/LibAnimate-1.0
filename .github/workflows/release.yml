@@ -32,11 +32,33 @@ jobs:
           fi
           echo "TAG_NAME=$TAG" >> "$GITHUB_ENV"
 
+      - name: Preserve local changelog script
+        uses: actions/checkout@v5
+        with:
+          ref: master
+          fetch-depth: 1
+          path: .workflow-tools
+
+      - name: Cache changelog script
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/libanimate-release-tools"
+          cp ".workflow-tools/scripts/generate_changelog.sh" "$RUNNER_TEMP/libanimate-release-tools/generate_changelog.sh"
+          chmod +x "$RUNNER_TEMP/libanimate-release-tools/generate_changelog.sh"
+          rm -rf .workflow-tools
+
       - name: Checkout tag
         uses: actions/checkout@v5
         with:
           ref: refs/tags/${{ env.TAG_NAME }}
           fetch-depth: 0
+
+      - name: Restore changelog script
+        shell: bash
+        run: |
+          mkdir -p scripts
+          cp "$RUNNER_TEMP/libanimate-release-tools/generate_changelog.sh" scripts/generate_changelog.sh
+          chmod +x scripts/generate_changelog.sh
 
       - name: Generate changelog
         shell: bash
