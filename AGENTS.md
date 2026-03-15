@@ -159,10 +159,19 @@ Packager directives are comments locally, so later files can override earlier on
 
 ## CI/CD
 
+### Workflows
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `lint.yml` | `pull_request_target` to master | Luacheck via `Xerrion/wow-workflows` reusable workflow |
+| `release.yml` | `push` to master | release-please PR via `Xerrion/wow-workflows`; dispatches `packager.yml` on release |
+| `packager.yml` | `workflow_dispatch` (from release.yml) | BigWigsMods packager via `Xerrion/wow-workflows` reusable workflow |
+
 ### Release Flow (release-please)
 - `release-please-action@v4` creates/updates a Release PR on every push to master
 - Merging the Release PR creates a git tag + GitHub Release
-- Tag push triggers `BigWigsMods/packager@v2` for CurseForge + Wago uploads
+- release.yml dispatches packager.yml with the tag name via `gh workflow run`
+- packager.yml runs `BigWigsMods/packager@v2` for CurseForge + Wago uploads
 - Config: `release-please-config.json`, manifest: `.release-please-manifest.json`
 - DO NOT manually create tags -- release-please handles versioning
 - No `v` prefix in tags (e.g., `3.5.4` not `v3.5.4`)
