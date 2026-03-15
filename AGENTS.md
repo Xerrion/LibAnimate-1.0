@@ -212,8 +212,6 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 - `refactor: <description> (#issue)` - code restructuring
 - `docs: <description>` - documentation only
 
-Always use `--no-gpg-sign` (GPG signing not available in CI agent environments).
-
 ### Pull Requests
 1. Create PRs via CLI using the repo's `.github/PULL_REQUEST_TEMPLATE.md` format
 2. Link to the issue with `Closes #N` in the PR body
