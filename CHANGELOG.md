@@ -3,6 +3,23 @@
 ### 🚀 Features
 
 - Bundle LibStub directly in repo (#29)
+## [3.5.8](https://github.com/Xerrion/LibAnimate/compare/3.5.7...3.5.8) (2026-03-15)
+
+
+### Documentation
+
+* remove no-gpg-sign references ([f0884e7](https://github.com/Xerrion/LibAnimate/commit/f0884e715897ef6c653b01ad6e19bda02a9457fb))
+* remove org migration reference from CHANGELOG ([d99a1d7](https://github.com/Xerrion/LibAnimate/commit/d99a1d7758d07dfb155905754824d618d0e3754c))
+* replace DragonAddons references with Xerrion in CHANGELOG ([1a2d67d](https://github.com/Xerrion/LibAnimate/commit/1a2d67d01892cd260930e213f2a406357c3126e2))
+* update CI/CD section for split release+packager workflow ([7b9ac93](https://github.com/Xerrion/LibAnimate/commit/7b9ac93948fc97a2a833aa26512ef2466f18cb47))
+
+
+### CI/CD
+
+* add packager workflow dispatch and actions:write permission ([8ccaffe](https://github.com/Xerrion/LibAnimate/commit/8ccaffe9edae20485181601d9b9109ab4e3f6008))
+* consolidate workflows to shared reusable callers ([40327fe](https://github.com/Xerrion/LibAnimate/commit/40327fe0e573b32a69acc40449bde6c961387d0c))
+* migrate to reusable release and TOC update workflows ([ac89244](https://github.com/Xerrion/LibAnimate/commit/ac892445f46731a0172f0190c1bd4e17b8491394))
+
 ## [3.5.7](https://github.com/Xerrion/LibAnimate/compare/3.5.6...3.5.7) (2026-03-07)
 
 
